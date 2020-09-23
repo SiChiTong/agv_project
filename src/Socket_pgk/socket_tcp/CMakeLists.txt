@@ -12,7 +12,6 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   server_lib
-  modbus_lib
 )
 
 ## System dependencies are found with CMake's conventions
@@ -130,10 +129,6 @@ target_link_libraries(server_node
 )
 add_executable(client_node src/client_node.cpp)
 target_link_libraries(client_node
-  ${catkin_LIBRARIES}
-)
-add_executable(example src/example.cpp)
-target_link_libraries(example
   ${catkin_LIBRARIES}
 )
 
