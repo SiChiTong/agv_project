@@ -1,0 +1,30 @@
+<launch>
+
+  <!-- sick_line_guidance: global configuration -->
+  <arg name="yaml"/>
+  <rosparam command="load" file="$(find r2serial_driver)/config/$(arg yaml)" />                    
+  <!-- Global yaml-file incl. link to eds-file -->
+
+  <node pkg="r2serial_driver" type="Navigation_cotrol" name="Navigation_cotrol" output="screen">
+  </node>
+  
+  <node pkg="r2serial_driver" type="linefolowersick" name="linefolowersick_forward" args = "0 forward" output="screen">
+  <rosparam command="load" file="$(find r2serial_driver)/config/$(arg yaml)" />   
+  </node>
+  
+  <node pkg="r2serial_driver" type="linefolowersick" name="linefolowersick_backward" args = "1 backward" output="screen">
+  <rosparam command="load" file="$(find r2serial_driver)/config/$(arg yaml)" />   
+  </node>
+
+  <arg name="port" default="/dev/ttyUSB0"/>
+  <arg name="baud" default="19200"/>
+  <node pkg="r2serial_driver" type="r2serial_driver" name="r2serial0" args="0 $(arg port) $(arg baud)" output="screen">
+  <remap from="ucCommand" to="uc0Command" />
+  <remap from="ucResponse" to="uc0Response" />
+  </node>
+ 
+  <node pkg="r2serial_driver" type="MD200_control_driver" name="MD200_control_driver" output="screen">
+  </node>
+
+ 
+</launch>
