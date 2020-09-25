@@ -53,6 +53,7 @@ private:
 		uint16_t SD[10000];
 
 	};
+
 public:
 	FX5U_series device;
 	fx5u_hardware();
