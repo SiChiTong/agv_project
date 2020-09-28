@@ -3,6 +3,7 @@ project(blvd20km_lib)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  std_msgs
 )
 
 catkin_package(

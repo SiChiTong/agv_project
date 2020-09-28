@@ -1,7 +1,36 @@
 #include "blvd20km_lib/BLVD20KM.h"
-#define POLY 0xA001
 
-uint16_t BLVD20KM_hieplm::getcrc16(uint8_t const *data_p, uint16_t length)
+#define POLY                0xA001
+#define FN_CODE_READ        0x03
+#define FN_CODE_WRITE       0x06
+#define FN_CODE_DIAGNOSIS   0x08
+#define FN_CODE_WRITE_MULTI 0x10
+
+#define ADDR_ALARM_H         0x0080
+#define ADDR_ALARM_L         0x0081
+#define ADDR_RESET_ALARM_H   0x0180
+#define ADDR_RESET_ALARM_L   0x0181
+#define ADDR_SPEED0_H        0x0480
+#define ADDR_SPEED0_L        0x0481
+#define ADDR_TORQUE_H        0x0700
+#define ADDR_TORQUE_L        0x0701
+#define ADDR_TORQUE_LIMIT0_H 0x0700
+#define ADDR_TORQUE_LIMIT0_L 0x0701
+#define ADDR_MOTOR_CONTROL   0x007d
+#define ADDR_ANALOG_MODE_L   0x10e3
+#define ADDR_CONFIG_H        0x018c
+#define ADDR_CONFIG_L        0x018d
+#define MOTOR_DIRECTOIN_STOP    0
+#define MOTOR_DIRECTOIN_FORWARD 1
+#define MOTOR_DIRECTOIN_REVERSE 2
+
+#define MOTOR_FORWARD_BIT      0b00001000
+#define MOTOR_REVERSE_BIT      0b00010000
+#define MOTOR_SLOW_CHANGE_BIT  0b00100000
+#define MOTOR_FREE_ON_STOP_BIT 0b10000000
+
+
+uint16_t BLVD20KM_hieplm::getCRC16(uint8_t const *data_p, uint16_t length)
 /*
 EX: Ban đầu CRC = 1111 1111 1111 1111 chuyển sang Hex là FFFF
 	Chọn data_p là 54 hay 0101 0100(1 byte) là số cần tính. 
@@ -39,86 +68,473 @@ EX: Ban đầu CRC = 1111 1111 1111 1111 chuyển sang Hex là FFFF
 	} while (--length);
 
 	return (crc);
-}   
+}
 
-FILE *serialInit(char * port, int baud)
+/*###############################################*/
+uint8_t lowByte(uint16_t lowData)
 {
-	int BAUD = 0;
-	int fd = -1;
-	struct termios newtio;
-	FILE *fp = NULL;
-	 
-	//Open the serial port as a file descriptor for low level configuration
-	// read/write, not controlling terminal for process,
-	fd = open(port, O_RDWR | O_NOCTTY | O_NDELAY );
-	if ( fd<0 )
-	{
+	uint8_t result = lowData;
+	return result;
+}
 
-	    ROS_ERROR("serialInit: Could not open serial device %s",port);
-	    return fp;
-	    
+/*###############################################*/
+uint8_t highByte(uint16_t highData)
+{
+	uint8_t result = highData >> 8;
+	return result;
+}
+
+/*###############################################*/
+
+void BLVD20KM_hieplm::serialInit(char * port, int baud)
+{
+	speed_t BAUD;
+	serial_port = open(port, O_RDWR);
+	if ( serial_port < 0 )
+	{
+		ROS_ERROR("serialInit: Could not open serial device %s",port);	    
 	}
-	 
-	// set up new settings
-	memset(&newtio, 0,sizeof(newtio));
-	newtio.c_cflag =  CS8 | CLOCAL | CREAD;  //no parity, 1 stop bit
-	 
-	newtio.c_iflag = IGNCR;    //ignore CR, other options off
-	newtio.c_iflag |= IGNBRK;  //ignore break condition
-	 
-	newtio.c_oflag = 0;        //all options off
-	 
-	newtio.c_lflag = ICANON;     //process input as lines
-	 
-	  // activate new settings
-	tcflush(fd, TCIFLUSH);
-	  //Look up appropriate baud rate constant
+
+	tty.c_cflag &= ~PARENB; // Clear parity bit, disabling parity (most common)
+	tty.c_cflag &= ~CSTOPB; // Clear stop field, only one stop bit used in communication (most common)
+	tty.c_cflag &= ~CSIZE; // Clear all bits that set the data size 
+	tty.c_cflag |= CS8; // 8 bits per byte (most common)
+	tty.c_cflag &= ~CRTSCTS; // Disable RTS/CTS hardware flow control (most common)
+	tty.c_cflag |= CREAD | CLOCAL; // Turn on READ & ignore ctrl lines (CLOCAL = 1)
+
+	tty.c_lflag &= ~ICANON;
+	tty.c_lflag &= ~ECHO; // Disable echo
+	tty.c_lflag &= ~ECHOE; // Disable erasure
+	tty.c_lflag &= ~ECHONL; // Disable new-line echo
+	tty.c_lflag &= ~ISIG; // Disable interpretation of INTR, QUIT and SUSP
+	tty.c_iflag &= ~(IXON | IXOFF | IXANY); // Turn off s/w flow ctrl
+	tty.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL); // Disable any special handling of received bytes
+
+	tty.c_oflag &= ~OPOST; // Prevent special interpretation of output bytes (e.g. newline chars)
+	tty.c_oflag &= ~ONLCR; // Prevent conversion of newline to carriage return/line feed
+	// tty.c_oflag &= ~OXTABS; // Prevent conversion of tabs to spaces (NOT PRESENT ON LINUX)
+	// tty.c_oflag &= ~ONOEOT; // Prevent removal of C-d chars (0x004) in output (NOT PRESENT ON LINUX)
+
+	tty.c_cc[VTIME] = 10;    // Wait for up to 1s (10 deciseconds), returning as soon as any data is received.
+	tty.c_cc[VMIN] = 0;
+
 	switch (baud)
-	{
-	    case 38400:
-	    default:
-	        BAUD = B38400;
-	        break;
-	    case 19200:
-	        BAUD  = B19200;
-	        break;
-	    case 9600:
-	        BAUD  = B9600;
-	        break;
-	    case 4800:
-	        BAUD  = B4800;
-	        break;
-	    case 2400:
-	        BAUD  = B2400;
-	        break;
-	    case 1800:
-	        BAUD  = B1800;
-	        break;
-	    case 1200:
-	        BAUD  = B1200;
-	        break;
-	}  //end of switch baud_rate
-	
-	if (cfsetispeed(&newtio, BAUD) < 0 || cfsetospeed(&newtio, BAUD) < 0)
-	{
-	    ROS_ERROR("serialInit: Failed to set serial baud rate: %d", baud);
-	    close(fd);
-	    return NULL;
-	}
-	tcsetattr(fd, TCSANOW, &newtio);
-	tcflush(fd, TCIOFLUSH);
-	 
-	//Open file as a standard I/O stream
-	fp = fdopen(fd, "r+");
-	if (!fp) {
-	    ROS_ERROR("serialInit: Failed to open serial stream %s", port);
-	    fp = NULL;
-	}
-	return fp;
+    {
+		case 38400:
+		default:
+			BAUD = B38400;
+			break;
+		case 19200:
+			BAUD  = B19200;
+			break;
+		case 9600:
+		BAUD  = B9600;
+			break;
+			case 4800:
+		BAUD  = B4800;
+		break;
+		case 2400:
+			BAUD  = B2400;
+			break;
+		case 1800:
+		BAUD  = B1800;
+			break;
+			case 1200:
+		BAUD  = B1200;
+		break;
+    }  //end of switch baud_rate
+
+	// Set in/out baud rate to be 9600
+	cfsetispeed(&tty, BAUD);
+	cfsetospeed(&tty, BAUD);
 }
-BLVD20KM_hieplm::BLVD20KM_hieplm(char * port, int baud)
+
+/*###############################################*/
+BLVD20KM_hieplm::BLVD20KM_hieplm(uint8_t address, char * port, int baud)
 {
-	fpSerial = serialInit(port, baud);
+	this->address = address;
+	ROS_INFO("connection initializing (%s) at %d baud", port, baud);
+	serialInit(port, baud);
 }
 
+/*###############################################*/
+bool BLVD20KM_hieplm::begin(void)
+{
+    // Save tty settings, also checking for error
+    if (tcsetattr(serial_port, TCSANOW, &tty) != 0) {
+      ROS_ERROR("Error %i from tcsetattr: %s\n", errno, strerror(errno));
 
+      return false;
+
+    }else{
+
+		ROS_INFO("serial connection successful");
+		return true;
+	}
+}
+
+/*###############################################*/
+void BLVD20KM_hieplm::closemotor(void)
+{
+	close(serial_port);
+}
+
+/*###############################################*/
+uint8_t BLVD20KM_hieplm::writeSpeedControlMode(uint16_t mode) {
+	uint8_t result;
+	result = writeRegister(ADDR_ANALOG_MODE_L, mode);
+	if (result != 0) 
+	{
+		return result;
+	}
+	return writeConfigTrigger(); // trigger after setting ADDR_ANALOG_MODE
+}
+
+/*###############################################*/
+uint8_t BLVD20KM_hieplm::readSpeedControlMode(uint16_t *mode) 
+{
+	return readRegisters(ADDR_ANALOG_MODE_L, 1, mode);
+}
+
+/*###############################################*/
+uint8_t BLVD20KM_hieplm::writeConfigTrigger() {
+	uint8_t result = writeStop();
+	if (result != 0) return result;
+	return writeRegister(ADDR_CONFIG_L, 1);
+}
+
+/*###############################################*/
+uint16_t createMotorControl16bit(uint8_t motorDirection, bool freeLockOnStop = true, bool slowChange = true, uint8_t motorDataNum = 0) {
+	// MB-FREE, -, STOP-MODE, REV, FWD, M1, M2, M0
+	uint16_t bits = 0x0000;
+	switch (motorDirection) 
+	{
+	case MOTOR_DIRECTOIN_REVERSE:
+		bits |= MOTOR_REVERSE_BIT;
+		break;
+	case MOTOR_DIRECTOIN_FORWARD:
+		bits |= MOTOR_FORWARD_BIT;
+		break;
+	}
+	if (freeLockOnStop) 
+	{
+		bits |= MOTOR_FREE_ON_STOP_BIT;
+	}
+	if (slowChange) 
+	{
+		bits |= MOTOR_SLOW_CHANGE_BIT;
+	}
+	if (motorDataNum != 0 && motorDataNum < 0b1000) 
+	{
+		bits |= motorDataNum;
+	}
+	return bits;
+}
+
+/*###############################################*/
+uint8_t BLVD20KM_hieplm::writeForward() 
+{
+
+#ifdef DEBUG_PRINT
+	println("forward");
+#endif
+  // uint16_t data16bit = B10101000; // forward and unlock blake
+  // uint16_t data16bit = B10001000;
+  // return writeRegister(ADDR_MOTOR_CONTROL, data16bit);
+	return writeRegister(ADDR_MOTOR_CONTROL, createMotorControl16bit(MOTOR_DIRECTOIN_FORWARD));
+}
+
+/*###############################################*/
+uint8_t BLVD20KM_hieplm::writeLock() 
+{
+
+#ifdef DEBUG_PRINT
+	println("lock");
+#endif
+	return writeRegister(ADDR_MOTOR_CONTROL, createMotorControl16bit(MOTOR_DIRECTOIN_STOP, false));
+}
+
+/*###############################################*/
+uint8_t BLVD20KM_hieplm::writeStop() 
+{
+#ifdef DEBUG_PRINT
+	println("stop");
+#endif
+	return writeRegister(ADDR_MOTOR_CONTROL, createMotorControl16bit(MOTOR_DIRECTOIN_STOP));
+}
+
+/*###############################################*/
+uint8_t BLVD20KM_hieplm::writeReverse() 
+{
+#ifdef DEBUG_PRINT
+	println("reverse");
+#endif
+	return writeRegister(ADDR_MOTOR_CONTROL, createMotorControl16bit(MOTOR_DIRECTOIN_REVERSE));
+}
+
+/*###############################################*/
+uint8_t BLVD20KM_hieplm::writeSpeed(uint16_t speed) 
+{
+#ifdef DEBUG_PRINT
+	println("writeSpeed " + String(speed));
+#endif
+	return writeRegister(ADDR_SPEED0_L, speed);
+}
+
+/*###############################################*/
+uint8_t BLVD20KM_hieplm::writeTorqueLimit(uint16_t torque) 
+{
+#ifdef DEBUG_PRINT
+	println("writeTorque " + String(torque));
+#endif
+	return writeRegister(ADDR_TORQUE_L, torque);
+}
+
+/*###############################################*/
+uint8_t BLVD20KM_hieplm::writeDiagnosis() 
+{
+	uint8_t result;
+	uint8_t data[41];
+	data[0] = 0;
+	data[1] = 0;
+	data[2] = 1;
+	data[3] = 2;
+	writeQuery(FN_CODE_DIAGNOSIS, data, sizeof(data));
+	for (uint8_t i = 0; i < 41; ++i) 
+	{
+		data[i] = 0;
+	}
+	result = readQuery(FN_CODE_DIAGNOSIS, data, sizeof(data));
+	if (result != 0) { return result; }
+	if (data[2] != 1 || data[3] != 2) 
+	{
+		return BLVD20KM_ERROR_DIAGNOSIS_DATA_INVALID;
+	}
+
+	return 0;
+}
+
+/*###############################################*/
+uint8_t BLVD20KM_hieplm::writeResetAlarm() 
+{
+#ifdef DEBUG_PRINT
+	println("reset alarm");
+#endif
+	return writeRegister(ADDR_RESET_ALARM_L, 1);
+}
+
+/*###############################################*/
+uint8_t BLVD20KM_hieplm::readAlarm(uint16_t *alarm) 
+{
+
+#ifdef DEBUG_PRINT
+	println("read alarm");
+#endif
+	return readRegisters(ADDR_ALARM_L, 1, alarm);
+}
+
+/*###############################################*/
+uint8_t BLVD20KM_hieplm::readDirection(bool *forwarding, bool *reversing, bool *freeLockOnStop) 
+{
+	uint16_t data;
+	uint8_t result;
+	result = readRegisters(ADDR_MOTOR_CONTROL, 1, &data);
+	if (result != 0) 
+	{
+		return result;
+	}
+	*forwarding = (MOTOR_FORWARD_BIT & data) != 0x00;
+	*reversing = (MOTOR_REVERSE_BIT & data) != 0x00;
+	*freeLockOnStop = (MOTOR_FREE_ON_STOP_BIT & data) != 0x00;
+	return 0;
+}
+
+/*###############################################*/
+uint16_t uint8tsToUint16t(uint8_t *chars) 
+{
+	return ((uint16_t) chars[0]) << 8 | (uint16_t) chars[1];
+}
+
+/*###############################################*/
+uint32_t uint16tsToUint32t(uint16_t *shorts) 
+{
+	return ((uint32_t) shorts[0]) << 16 | (uint32_t) shorts[1];
+}
+
+/*###############################################*/
+uint8_t BLVD20KM_hieplm::readUint32t(uint16_t readStartAddress, uint32_t *value) 
+{
+	uint8_t result;
+	result = readRegisters(readStartAddress, 2, uint16Buffer);
+	if (result != 0) 
+	{
+		return result;
+	}
+	*value = uint16tsToUint32t(uint16Buffer);
+	return 0;
+}
+
+/*###############################################*/
+uint8_t BLVD20KM_hieplm::readTorque(uint16_t *torque) 
+{
+	return readRegisters(ADDR_TORQUE_L, 1, torque);
+}
+
+/*###############################################*/
+uint8_t BLVD20KM_hieplm::readTorqueLimit(uint16_t *torque) 
+{
+	return readRegisters(ADDR_TORQUE_LIMIT0_L, 1, torque);
+}
+
+/*###############################################*/
+uint8_t BLVD20KM_hieplm::readSpeed(uint16_t *speed) 
+{
+	return readRegisters(ADDR_SPEED0_L, 1, speed);
+}
+
+/*###############################################*/
+uint8_t BLVD20KM_hieplm::writeRegister(uint16_t writeAddress, uint16_t data16bit) 
+{
+	uint8_t data[] = {
+						highByte(writeAddress),
+						lowByte(writeAddress),
+						highByte(data16bit),
+						lowByte(data16bit)
+					 };
+
+	writeQuery(FN_CODE_WRITE, data, sizeof(data));
+	return readQuery(FN_CODE_WRITE, data, sizeof(data));
+}
+
+/*###############################################*/
+uint8_t BLVD20KM_hieplm::readRegisters(uint16_t readStartAddress, uint16_t dataLen, uint16_t* registerData) 
+{
+	uint8_t result;
+	uint8_t data[] = {
+						highByte(readStartAddress),
+						lowByte(readStartAddress),
+						highByte(dataLen),
+						lowByte(dataLen)
+					 };
+
+	writeQuery(FN_CODE_READ, data, sizeof(data));
+	result = readQuery(FN_CODE_READ, uint8Buffer, dataLen * 2 + 1);
+	if (result != 0) { return result; }
+	// println("");
+	// println(rDataLen);
+	// println(data16bitLen * 2 + 1);
+	for (uint16_t i = 0; i < dataLen; ++i) 
+	{
+		registerData[i] = uint8tsToUint16t(&uint8Buffer[i * 2 + 1]); // + 1 to skip data length byte
+	}
+
+	return 0;
+}
+
+/*###############################################*/
+void BLVD20KM_hieplm::writeQuery(uint8_t fnCode, uint8_t* data, uint16_t dataLen)
+{
+	uint16_t queryLen = 4 + dataLen;
+	uint16_t i;
+	queryBuffer[0] = address;
+	queryBuffer[1] = fnCode;
+	for (i = 0; i < dataLen; ++i)  queryBuffer[i+2] = data[i];
+	uint16_t crc16 = getCRC16(queryBuffer, queryLen - 2);
+	queryBuffer[queryLen - 2] = lowByte(crc16);
+	queryBuffer[queryLen - 1] = highByte(crc16);
+
+	uint8_t read_buf [256]; 
+	memset(&read_buf, '\0', sizeof(read_buf));
+	// remove received buffer before sending
+	while(read(serial_port, &read_buf, sizeof(read_buf)))
+	{
+		ROS_INFO("remove received buffer before sending");
+	}
+#ifdef DEBUG_PRINT
+	print("Send: ");
+#endif
+	uint8_t msg[queryLen];
+	for (i = 0; i < queryLen; ++i) 
+	{
+		msg[i] = queryBuffer[i];
+#ifdef DEBUG_PRINT
+		print("%o",queryBuffer[i]);
+		print(" ");
+#endif
+	}
+  	write(serial_port,msg,(size_t)queryLen);
+	usleep(1000); //delay 1ms
+	
+#ifdef DEBUG_PRINT
+	println("");
+#endif
+}
+
+/*###############################################*/
+uint8_t BLVD20KM_hieplm::readQuery(uint8_t fnCode, uint8_t* data, uint16_t dataLen)
+{
+	uint16_t queryLen = 0;
+	std::clock_t    start;
+	unsigned long waitFrom = std::clock();
+	const unsigned long timeoutMs = 20;
+
+#ifdef DEBUG_PRINT
+	print("Receive: ");
+#endif
+	uint8_t read_buf [256]; 
+	memset(&read_buf, '\0', sizeof(read_buf));
+    while((std::clock() - waitFrom)/(double)(CLOCKS_PER_SEC / 1000) < timeoutMs)
+    {
+    	int num_bytes = read(serial_port, &read_buf, sizeof(read_buf));
+    	if(!num_bytes)
+    	{
+    		usleep(1000); //delay 1ms
+    		continue;
+    	}
+
+    waitFrom = std::clock();
+    if (queryLen == BLVD20KM_QUERY_MAX_LEN) 
+    {
+#ifdef DEBUG_PRINT
+		println("stop receiving because buffer length was over");
+#endif
+		return BLVD20KM_ERROR_OVER_QUERY_MAX_LEN;
+    }
+    queryBuffer[queryLen] = read_buf[queryLen];
+#ifdef DEBUG_PRINT
+    Serial.print(queryBuffer[queryLen], HEX);
+    Serial.print(" ");
+#endif
+    ++queryLen;
+  	}
+#ifdef DEBUG_PRINT
+	println("");
+#endif
+	if (queryLen == 0) {
+	return BLVD20KM_ERROR_NO_RESPONSE;
+	}
+
+	uint16_t crc = getCRC16(queryBuffer, queryLen - 2);
+	if (highByte(crc) != queryBuffer[queryLen - 1] || lowByte(crc) != queryBuffer[queryLen - 2]) {
+		return BLVD20KM_ERROR_UNMATCH_CRC;
+	}
+	if (queryBuffer[0] != address) {
+		return BLVD20KM_ERROR_UNMATCH_ADDRESS;
+	}
+	if (queryBuffer[1] != fnCode) {
+		if (queryBuffer[1] == (fnCode + 0x80)) {
+			return queryBuffer[2]; // ERROR_CODE
+		} else {
+			return BLVD20KM_ERROR_UNMATCH_FN_CODE;
+		}
+	}
+
+	if (dataLen != queryLen - 4) {
+		return BLVD20KM_ERROR_UNMATCH_DATA_LEN;
+	}
+
+	for (uint16_t i = 0; i < dataLen; ++i) {
+		data[i] = queryBuffer[i + 2];
+	}
+	return 0;
+}

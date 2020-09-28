@@ -2,19 +2,29 @@
 #define BLVD20KM_H
 
 #pragma once // tránh tình trạng đụng độ thư viện - trong mọi tình huống chỉ có 1 thư viện được tạo ra ở tất cả các file
+
+// C library headers
+#include <stdio.h>
+#include <string.h>
+
+// Linux headers
+#include <fcntl.h> // Contains file controls like O_RDWR
+#include <errno.h> // Error integer and strerror() function
+#include <termios.h> // Contains POSIX terminal control definitions
+#include <unistd.h> // write(), read(), close()
+
 #include <sstream>
 #include <iostream>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <fcntl.h>
-#include <termios.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <ctime>
+#include "std_msgs/String.h"
 #include "ros/ros.h"
 using namespace std;
 
-#define DEFAULT_BAUDRATE 19200
+#define DEFAULT_BAUDRATE 115200
 #define DEFAULT_SERIALPORT "/dev/ttyUSB0"
 
 #define BLVD20KM_QUERY_MAX_LEN 41
@@ -40,7 +50,9 @@ class BLVD20KM_hieplm
 {
 	public:
 
-		BLVD20KM_hieplm(char * port, int baud);
+		BLVD20KM_hieplm(uint8_t address, char * port, int baud);
+		bool begin(void);
+		void closemotor(void);
 		uint8_t writeForward();
 		uint8_t writeLock();
 		uint8_t writeStop();
@@ -60,11 +72,12 @@ class BLVD20KM_hieplm
 		uint8_t writeResetAlarm();
 
 	private:
-		FILE *fpSerial = NULL;   //serial port file pointer
-		uint16_t getcrc16(uint8_t const *data_p, uint16_t length);
+		/*test*/
+		int serial_port;
+		struct termios tty;
+	    void serialInit(char * port, int baud);
+		uint16_t getCRC16(uint8_t const *data_p, uint16_t length);
 		uint8_t address;
-	    uint8_t dePin;
-	    uint8_t rePin;
 	    uint8_t queryBuffer[BLVD20KM_QUERY_MAX_LEN];
 	    uint8_t readUint32t(uint16_t readStartAddress, uint32_t *value);
 	    uint8_t readQuery(uint8_t fnCode, uint8_t* data, uint16_t dataLen);
