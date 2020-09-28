@@ -86,20 +86,20 @@ int main(int argc, char **argv)
   robot.start = false;
   
   ros::init(argc, argv, "Navigation_control");
-  ros::NodeHandle n;
+  ros::NodeHandle nh;
   ros::Rate loop_rate(60);
 
   /* Publisher */
   ros::Publisher Navigation_control;
-  Navigation_control = n.advertise<r2serial_driver::speed_wheel>("Navigation_control_cmd", 1000);
+  Navigation_control = nh.advertise<r2serial_driver::speed_wheel>("Navigation_control_cmd", 1000);
 
 
   /* Subscriber */
   ros::Subscriber cmd_vel;
   ros::Subscriber teleop_key;
 
-  cmd_vel = n.subscribe("cmd_vel", 10,cmd_velCallback);
-  teleop_key = n.subscribe("cmd_vel", 10,teleop_keyCallback);
+  cmd_vel = nh.subscribe("cmd_vel", 10,cmd_velCallback);
+  teleop_key = nh.subscribe("cmd_vel", 10,teleop_keyCallback);
 
   
   while (ros::ok())
