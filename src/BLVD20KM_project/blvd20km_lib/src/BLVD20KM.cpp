@@ -89,7 +89,9 @@ uint8_t highByte(uint16_t highData)
 void BLVD20KM_hieplm::serialInit(char * port, int baud)
 {
 	speed_t BAUD;
-	serial_port = open(port, O_RDWR);
+	serial_port = open(port, O_RDWR | O_NOCTTY | O_NDELAY);
+
+	//serial_port = open(port, O_RDWR | O_NONBLOCK);
 	if ( serial_port < 0 )
 	{
 		ROS_ERROR("serialInit: Could not open serial device %s",port);	    
@@ -275,9 +277,7 @@ uint8_t BLVD20KM_hieplm::writeReverse()
 /*###############################################*/
 uint8_t BLVD20KM_hieplm::writeSpeed(uint16_t speed) 
 {
-#ifdef DEBUG_PRINT
-	println("writeSpeed " + String(speed));
-#endif
+
 	return writeRegister(ADDR_SPEED0_L, speed);
 }
 
@@ -401,7 +401,7 @@ uint8_t BLVD20KM_hieplm::writeRegister(uint16_t writeAddress, uint16_t data16bit
 						highByte(data16bit),
 						lowByte(data16bit)
 					 };
-
+	
 	writeQuery(FN_CODE_WRITE, data, sizeof(data));
 	return readQuery(FN_CODE_WRITE, data, sizeof(data));
 }
@@ -416,13 +416,10 @@ uint8_t BLVD20KM_hieplm::readRegisters(uint16_t readStartAddress, uint16_t dataL
 						highByte(dataLen),
 						lowByte(dataLen)
 					 };
-
+	
 	writeQuery(FN_CODE_READ, data, sizeof(data));
 	result = readQuery(FN_CODE_READ, uint8Buffer, dataLen * 2 + 1);
 	if (result != 0) { return result; }
-	// println("");
-	// println(rDataLen);
-	// println(data16bitLen * 2 + 1);
 	for (uint16_t i = 0; i < dataLen; ++i) 
 	{
 		registerData[i] = uint8tsToUint16t(&uint8Buffer[i * 2 + 1]); // + 1 to skip data length byte
@@ -446,27 +443,25 @@ void BLVD20KM_hieplm::writeQuery(uint8_t fnCode, uint8_t* data, uint16_t dataLen
 	uint8_t read_buf [256]; 
 	memset(&read_buf, '\0', sizeof(read_buf));
 	// remove received buffer before sending
-	while(read(serial_port, &read_buf, sizeof(read_buf)))
-	{
-		ROS_INFO("remove received buffer before sending");
-	}
+	read(serial_port, &read_buf, sizeof(read_buf));
+
 #ifdef DEBUG_PRINT
-	print("Send: ");
+	printf("Send: ");
 #endif
 	uint8_t msg[queryLen];
 	for (i = 0; i < queryLen; ++i) 
 	{
 		msg[i] = queryBuffer[i];
 #ifdef DEBUG_PRINT
-		print("%o",queryBuffer[i]);
-		print(" ");
+		printf("%o",queryBuffer[i]);
+		printf(" ");
 #endif
 	}
   	write(serial_port,msg,(size_t)queryLen);
 	usleep(1000); //delay 1ms
 	
 #ifdef DEBUG_PRINT
-	println("");
+	printf("");
 #endif
 }
 
@@ -483,7 +478,8 @@ uint8_t BLVD20KM_hieplm::readQuery(uint8_t fnCode, uint8_t* data, uint16_t dataL
 #endif
 	uint8_t read_buf [256]; 
 	memset(&read_buf, '\0', sizeof(read_buf));
-    while((std::clock() - waitFrom)/(double)(CLOCKS_PER_SEC / 1000) < timeoutMs)
+	
+    while((std::clock() - waitFrom)/(double)(CLOCKS_PER_SEC / 1000000) < timeoutMs)
     {
     	int num_bytes = read(serial_port, &read_buf, sizeof(read_buf));
     	if(!num_bytes)
@@ -507,6 +503,7 @@ uint8_t BLVD20KM_hieplm::readQuery(uint8_t fnCode, uint8_t* data, uint16_t dataL
 #endif
     ++queryLen;
   	}
+  	
 #ifdef DEBUG_PRINT
 	println("");
 #endif
