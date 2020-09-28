@@ -170,7 +170,7 @@ bool BLVD20KM_hieplm::begin(void)
 
     }else{
 
-		ROS_INFO("serial connection successful");
+		ROS_INFO("serial connection driver %u successful",address);
 		return true;
 	}
 }
