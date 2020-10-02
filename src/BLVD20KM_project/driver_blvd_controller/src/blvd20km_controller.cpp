@@ -15,7 +15,6 @@ int main(int argc, char **argv)
 	BLVD20KM_hieplm *right_motor = new BLVD20KM_hieplm(MOTOR_ADDRESS2, (char *)DEFAULT_SERIALPORT,DEFAULT_BAUDRATE); 
 	if(!right_motor -> begin()) return 1; 
 	
-
 	/*create ros node*/
 	ros::init(argc, argv, "Driver_motor");
 	ros::NodeHandle nh;
