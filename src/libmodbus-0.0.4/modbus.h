@@ -15,11 +15,11 @@
 
 #define VERSION "0.0.4"
 
-struct termios saved_tty_parameters;			/* old serial port setting (restored on close) */
-struct termios Mb_tio;								/* new serail port setting */
+static struct termios saved_tty_parameters;			/* old serial port setting (restored on close) */
+static struct termios Mb_tio;								/* new serail port setting */
 
 
-int Mb_verbose;										/* print debug informations */
+static int Mb_verbose;										/* print debug informations */
 int Mb_status;											/* stat of the software : This number is free, it's use with function #07 */
 
 

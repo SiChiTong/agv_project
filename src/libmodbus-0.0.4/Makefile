@@ -10,7 +10,7 @@ CC=gcc
 NAME=libmodbus
 VERSION=0.0.4
 
-CFLAGS	= -Wall -O3
+CFLAGS	= -Wall -O3 -fPIC
 
 all: libmodbus
 
@@ -38,10 +38,7 @@ install:
 	chown root.root libmodbus.so
 	cp libmodbus.so /usr/lib/
 	cp modbus.h /usr/include
-	mkdir /usr/doc/libmodbus
-	cp README /usr/doc/libmodbus
-	cp AUTHORS /usr/doc/libmodbus
-	cp COPYING /usr/doc/libmodbus
+	
 uninstall:
 	rm /usr/lib/libmodbus.so
 	rm /usr/include/modbus.h

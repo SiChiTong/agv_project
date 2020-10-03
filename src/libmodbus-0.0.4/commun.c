@@ -111,7 +111,7 @@ int Mb_open_device(char Mbc_port[20], int Mbc_speed, int Mbc_parity, int Mbc_bit
   {
     perror("Open device failure\n") ;
     exit(-1) ;
-  }
+  } else   fcntl(fd, F_SETFL, 0);
 
   /* save olds settings port */
   if (tcgetattr (fd,&saved_tty_parameters) < 0)
@@ -121,78 +121,80 @@ int Mb_open_device(char Mbc_port[20], int Mbc_speed, int Mbc_parity, int Mbc_bit
   }
 
   /* settings port */
-  bzero(&Mb_tio,sizeof(&Mb_tio));
-
+  bzero(&Mb_tio,sizeof(Mb_tio));
+  speed_t BAUD;
   switch (Mbc_speed)
   {
      case 0:
-        Mb_tio.c_cflag = B0;
+        BAUD = B0;
         break;
      case 50:
-        Mb_tio.c_cflag = B50;
+        BAUD = B50;
         break;
      case 75:
-        Mb_tio.c_cflag = B75;
+        BAUD = B75;
         break;
      case 110:
-        Mb_tio.c_cflag = B110;
+        BAUD = B110;
         break;
      case 134:
-        Mb_tio.c_cflag = B134;
+        BAUD = B134;
         break;
      case 150:
-        Mb_tio.c_cflag = B150;
+        BAUD = B150;
         break;
      case 200:
-        Mb_tio.c_cflag = B200;
+        BAUD = B200;
         break;
      case 300:
-        Mb_tio.c_cflag = B300;
+        BAUD = B300;
         break;
      case 600:
-        Mb_tio.c_cflag = B600;
+        BAUD = B600;
         break;
      case 1200:
-        Mb_tio.c_cflag = B1200;
+        BAUD = B1200;
         break;
      case 1800:
-        Mb_tio.c_cflag = B1800;
+        BAUD = B1800;
         break;
      case 2400:
-        Mb_tio.c_cflag = B2400;
+        BAUD = B2400;
         break;
      case 4800:
-        Mb_tio.c_cflag = B4800;
+        BAUD = B4800;
         break;
      case 9600:
-        Mb_tio.c_cflag = B9600;
+        BAUD = B9600;
         break;
      case 19200:
-        Mb_tio.c_cflag = B19200;
+        BAUD = B19200;
         break;
      case 38400:
-        Mb_tio.c_cflag = B38400;
+        BAUD = B38400;
         break;
      case 57600:
-        Mb_tio.c_cflag = B57600;
+        BAUD = B57600;
         break;
      case 115200:
-        Mb_tio.c_cflag = B115200;
+        BAUD = B115200;
         break;
      case 230400:
-        Mb_tio.c_cflag = B230400;
+        BAUD = B230400;
         break;
      default:
-        Mb_tio.c_cflag = B9600;
+        BAUD = B9600;
   }
+  cfsetispeed(&Mb_tio, BAUD);
+  cfsetospeed(&Mb_tio, BAUD);
   switch (Mbc_bit_l)
   {
      case 7:
-        Mb_tio.c_cflag = Mb_tio.c_cflag | CS7;
+        Mb_tio.c_cflag |= CS7;
         break;
      case 8:
      default:
-        Mb_tio.c_cflag = Mb_tio.c_cflag | CS8;
+        Mb_tio.c_cflag |= CS8;
         break;
   }
   switch (Mbc_parity)
@@ -226,26 +228,12 @@ int Mb_open_device(char Mbc_port[20], int Mbc_speed, int Mbc_parity, int Mbc_bit
   /* clean port */
   tcflush(fd, TCIFLUSH);
 
-  fcntl(fd, F_SETFL, FASYNC);
   /* activate the settings port */
   if (tcsetattr(fd,TCSANOW,&Mb_tio) <0)
   {
     perror("Can't set terminal parameters ");
     return -1 ;
   }
-  
-  /* clean I & O device */
-  tcflush(fd,TCIOFLUSH);
-  
-   if (Mb_verbose)
-   {
-      printf("setting ok:\n");
-      printf("device        %s\n",Mbc_port);
-      printf("speed         %d\n",Mbc_speed);
-      printf("data bits     %d\n",Mbc_bit_l);
-      printf("stop bits     %d\n",Mbc_bit_s);
-      printf("parity        %d\n",Mbc_parity);
-   }
    return fd ;
 }
 
