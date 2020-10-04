@@ -9,7 +9,7 @@ Mb_device : device descriptor
 
 no output
 ************************************************************************************/
-void modbusrtu::Mb_close_device(int Mb_device)
+void Mb_close_device(int Mb_device)
 {
   if (tcsetattr (Mb_device,TCSANOW,&saved_tty_parameters) < 0)
     perror("Can't restore terminal parameters ");
@@ -31,7 +31,7 @@ answer  :
 ---------
 device descriptor
 ************************************************************************************/
-int modbusrtu::Mb_open_device(const char *Mbc_port, int Mbc_speed, int Mbc_parity, int Mbc_bit_l, int Mbc_bit_s)
+int Mb_open_device(const char *Mbc_port, int Mbc_speed, int Mbc_parity, int Mbc_bit_l, int Mbc_bit_s)
 {
 	int fd;	/* File descriptor for the port */
 	/* open port */
@@ -174,5 +174,3 @@ int modbusrtu::Mb_open_device(const char *Mbc_port, int Mbc_speed, int Mbc_parit
 
 	return fd ;
 }
-modbusrtu::modbusrtu(){}
-modbusrtu::~modbusrtu(){}

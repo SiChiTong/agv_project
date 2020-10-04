@@ -36,21 +36,11 @@ typedef struct {
    int timeout;												/* timeout in ms */
 } Mbm_trame;
 
-class modbusrtu
-{
-
-	private:
-		struct termios saved_tty_parameters;			/* old serial port setting (restored on close) */
-		struct termios Mb_tio;						/* new serail port setting */
-	public:
-		int Mb_open_device(const char *Mbc_port, int Mbc_speed,/* open device and configure it */	
-							int Mbc_parity, int Mbc_bit_l,
-							 int Mbc_bit_s);	
-		void Mb_close_device(int Mb_device);				/* close device*/	
-		modbusrtu();
-		~modbusrtu();
-		
-};
-
+static struct termios saved_tty_parameters;			/* old serial port setting (restored on close) */
+static struct termios Mb_tio;						/* new serail port setting */
+int Mb_open_device(const char *Mbc_port, int Mbc_speed,/* open device and configure it */	
+					int Mbc_parity, int Mbc_bit_l,
+					 int Mbc_bit_s);	
+void Mb_close_device(int Mb_device);				/* close device*/	
 
 #endif //MODBUSPP_MODBUS_H

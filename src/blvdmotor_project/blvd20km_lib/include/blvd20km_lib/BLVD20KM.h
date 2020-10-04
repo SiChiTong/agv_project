@@ -4,12 +4,16 @@
 #pragma once // tránh tình trạng đụng độ thư viện - trong mọi tình huống chỉ có 1 thư viện được tạo ra ở tất cả các file
 
 // C library headers
-#include <sstream>
-#include <iostream>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <stdlib.h>
+#include <iostream>  /* std::cout */
+#include <stdio.h>   /* Standard input/output definitions */
+#include <string.h>  /* String function definitions */
+#include <unistd.h>  /* UNIX standard function definitions */
+#include <fcntl.h>   /* File control definitions */
+#include <errno.h>   /* Error number definitions */
+#include <termios.h> /* POSIX terminal control definitions */
+#include <time.h>	 /* delay */
+#include <cstdint>	 /* uin8_t */
+
 
 #include "std_msgs/String.h"
 #include "ros/ros.h"
@@ -17,6 +21,7 @@ using namespace std;
 
 #define DEFAULT_BAUDRATE 115200
 #define DEFAULT_SERIALPORT "/dev/ttyUSB0"
+#define C3_5_time 2000
 
 #define BLVD20KM_QUERY_MAX_LEN 41
 #define BLVD20KM_ERROR_CODE_INVALID_FN        0x01
@@ -41,8 +46,8 @@ class BLVD20KM_hieplm
 {
 	public:
 
-		BLVD20KM_hieplm(int serial_port, uint8_t address);
-		void closemotor(void);
+		uint8_t address;
+		BLVD20KM_hieplm(int serial_port, termios Mb_tio ,uint8_t address);
 		uint8_t writeForward();
 		uint8_t writeLock();
 		uint8_t writeStop();
@@ -64,9 +69,9 @@ class BLVD20KM_hieplm
 	private:
 		/*test*/
 		int serial_port;
-		uint8_t address;
+		struct termios Mb_tio;
 	    uint8_t queryBuffer[BLVD20KM_QUERY_MAX_LEN];
-	    void serialInit(int serial_port, uint8_t address);
+	    void serialInit(int serial_port, termios Mb_tio,uint8_t address);
 	    /* check the crc of a message packet*/									
 		uint16_t getCRC16(uint8_t const *data_p, uint16_t length, uint16_t POLY);
 	    uint8_t readUint32t(uint16_t readStartAddress, uint32_t *value);
@@ -75,6 +80,7 @@ class BLVD20KM_hieplm
 	    uint8_t writeConfigTrigger();
 	    uint8_t writeRegister(uint16_t writeAddress, uint16_t data16bit);
 	    void writeQuery(uint8_t fnCode, uint8_t* data, uint16_t dataLen);
+	    void cleanbuff();
 
 	    uint16_t uint16Buffer[8];
 	    uint8_t uint8Buffer[41];
