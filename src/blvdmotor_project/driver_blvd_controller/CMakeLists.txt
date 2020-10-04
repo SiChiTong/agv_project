@@ -7,6 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   message_generation
   blvd20km_lib
+  mbrtu
 )
 
 

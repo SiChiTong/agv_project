@@ -4,22 +4,13 @@
 #pragma once // tránh tình trạng đụng độ thư viện - trong mọi tình huống chỉ có 1 thư viện được tạo ra ở tất cả các file
 
 // C library headers
-#include <stdio.h>
-#include <string.h>
-
-// Linux headers
-#include <fcntl.h> // Contains file controls like O_RDWR
-#include <errno.h> // Error integer and strerror() function
-#include <termios.h> // Contains POSIX terminal control definitions
-#include <unistd.h> // write(), read(), close()
-
 #include <sstream>
 #include <iostream>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <stdlib.h>
-#include <ctime>
+
 #include "std_msgs/String.h"
 #include "ros/ros.h"
 using namespace std;
@@ -50,8 +41,7 @@ class BLVD20KM_hieplm
 {
 	public:
 
-		BLVD20KM_hieplm(uint8_t address, char * port, int baud);
-		bool begin(void);
+		BLVD20KM_hieplm(int serial_port, uint8_t address);
 		void closemotor(void);
 		uint8_t writeForward();
 		uint8_t writeLock();
@@ -74,11 +64,11 @@ class BLVD20KM_hieplm
 	private:
 		/*test*/
 		int serial_port;
-		struct termios tty;
-	    void serialInit(char * port, int baud);
-		uint16_t getCRC16(uint8_t const *data_p, uint16_t length);
 		uint8_t address;
 	    uint8_t queryBuffer[BLVD20KM_QUERY_MAX_LEN];
+	    void serialInit(int serial_port, uint8_t address);
+	    /* check the crc of a message packet*/									
+		uint16_t getCRC16(uint8_t const *data_p, uint16_t length, uint16_t POLY);
 	    uint8_t readUint32t(uint16_t readStartAddress, uint32_t *value);
 	    uint8_t readQuery(uint8_t fnCode, uint8_t* data, uint16_t dataLen);
 	    uint8_t readRegisters(uint16_t readStartAddress, uint16_t dataLen, uint16_t* registerData);

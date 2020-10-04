@@ -1,9 +1,8 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(blvd20km_lib)
+project(mbrtu)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  std_msgs
 )
 
 catkin_package(
@@ -14,16 +13,22 @@ catkin_package(
 )
 include_directories(
   include
+  ${Boost_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
-)
-add_library(${PROJECT_NAME}
-  src/BLVD20KM.cpp
+  ${console_bridge_INCLUDE_DIRS}
 )
 
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+#modbustcp
+set(YOUR_LIB_SOURCES
+    src/${PROJECT_NAME}/modbusrtu.cpp
+)
+add_library(${PROJECT_NAME} ${YOUR_LIB_SOURCES})
+target_link_libraries(${PROJECT_NAME} 
+                      ${catkin_LIBRARIES}
+                      ${Boost_LIBRARIES}
+                      ${GSTREAMER_LIBRARIES})
 
-install(
-  TARGETS ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}

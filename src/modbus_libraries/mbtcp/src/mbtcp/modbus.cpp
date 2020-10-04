@@ -1,8 +1,7 @@
-
 //
-// Created by Fanzhe on 5/29/2017.
+// Created by hiep 10/4/2020
 //
-#include "modbus_lib/modbus.h"
+#include "mbtcp/modbus.h"
 
 /**
  * Main Constructor of Modbus Connector Object

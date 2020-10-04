@@ -5,7 +5,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   message_generation
-  modbus_lib
+  mbtcp
   fx5u_hardware
 )
 
