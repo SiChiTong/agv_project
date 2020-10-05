@@ -66,6 +66,7 @@ int Mb_calcul_crc(byte trame[],int n)
 				crc=crc^0xa001;
 		}
 	}
+
 	trame[n+1]=crc>>8;
 	trame[n]=crc&255;
 	return crc;

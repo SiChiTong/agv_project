@@ -31,8 +31,6 @@ int main()
    u_int8_t Write_stop[8]= {0x01, 0x06, 0x01, 0x8D, 0x00, 0x01, 0xD9, 0xDD};
    write(device, Write_stop, 8);
 
-  
-
    while(1)
    {
 
