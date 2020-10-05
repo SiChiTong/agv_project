@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(
     FILES
+    speed_wheel.msg
     MLS_Measurement.msg
 )
 
@@ -34,6 +35,11 @@ catkin_package(
 add_executable(blvd20km_controller src/blvd20km_controller.cpp)
 add_dependencies(blvd20km_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(blvd20km_controller ${catkin_LIBRARIES})
+
+#Navigation_cotrol
+add_executable(Navigation_cotrol src/Navigation_cotrol.cpp)
+add_dependencies(Navigation_cotrol ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(Navigation_cotrol ${catkin_LIBRARIES})
 
 include_directories(
 # include

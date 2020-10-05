@@ -331,14 +331,18 @@ uint8_t readQuery(int fd, uint8_t address, uint8_t fnCode, uint8_t data[], uint1
 
 	uint8_t read_buf [BLVD20KM_QUERY_MAX_LEN];
 	memset(&read_buf, '\0', sizeof(read_buf));
-	
-    while(true)
+	tcgetattr(fd, &Mb_tio);
+	Mb_tio.c_cc[VMIN]=0;
+	Mb_tio.c_cc[VTIME]=1;
+
+    while( (clock() - start)/(double)(CLOCKS_PER_SEC / 1000) <= timeoutMs)
     {
-    	queryLen = read(fd, &read_buf, sizeof(read_buf));
-    	if(queryLen||(clock() - start)/(double)(CLOCKS_PER_SEC / 1000) < timeoutMs)
+    	if(queryLen = read(fd, &read_buf, sizeof(read_buf)))
     		break;  		
   	}
-  
+
+  	Mb_tio.c_cc[VMIN]=1;
+	Mb_tio.c_cc[VTIME]=0;
 	if (queryLen == 0) 
 		return BLVD20KM_ERROR_NO_RESPONSE;
 

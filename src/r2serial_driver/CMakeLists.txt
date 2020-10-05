@@ -40,9 +40,9 @@ add_dependencies(MD200_control_driver ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 target_link_libraries(MD200_control_driver ${catkin_LIBRARIES})
 
 #Navigation_cotrol
-add_executable(Navigation_cotrol src/Navigation_cotrol.cpp)
-add_dependencies(Navigation_cotrol ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(Navigation_cotrol ${catkin_LIBRARIES})
+##add_executable(Navigation_cotrol src/Navigation_cotrol.cpp)
+##add_dependencies(Navigation_cotrol ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+##target_link_libraries(Navigation_cotrol ${catkin_LIBRARIES})
 
 #linefolowersick
 add_executable(linefolowersick src/linefolowersick.cpp)
