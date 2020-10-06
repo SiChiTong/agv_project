@@ -39,6 +39,8 @@
 #define ADDR_RESET_ALARM_L   0x0181
 #define ADDR_SPEED0_H        0x0480
 #define ADDR_SPEED0_L        0x0481
+#define FEEDBACK_SPEED_H	 0x00CE
+#define FEEDBACK_SPEED_L	 0x00CF
 #define ADDR_TORQUE_H        0x0700
 #define ADDR_TORQUE_L        0x0701
 #define ADDR_TORQUE_LIMIT0_H 0x0700
@@ -76,8 +78,11 @@
 #define BLVD02KM_SPEED_MODE_USE_DIGITALS 0x0001
 
 int fd; 
+fd_set set;
+struct timeval timeout;
 uint8_t uint8Buffer[41];
 uint16_t uint16Buffer[8];
+
 static struct termios saved_tty_parameters;					/* old serial port setting (restored on close) */
 static struct termios Mb_tio;								/* new serail port setting */
 void Mb_open_device(const char Mbc_port[], int Mbc_speed,	/* open device and configure it */	
@@ -109,5 +114,5 @@ uint8_t readAlarm(uint8_t address,uint16_t *alarm);
 uint8_t readTorque(uint8_t address,uint16_t *torque);
 uint8_t readTorqueLimit(uint8_t address,uint16_t *torque);
 uint8_t readUint32t(uint8_t address,uint16_t readStartAddress, uint32_t *value);
-
+uint8_t feedspeed(uint8_t address, uint16_t *speed);
 #endif //MODBUSPP_MODBUS_H

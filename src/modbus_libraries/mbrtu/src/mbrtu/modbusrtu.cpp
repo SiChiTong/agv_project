@@ -92,7 +92,12 @@ void Mb_open_device(const char Mbc_port[], int Mbc_speed, int Mbc_parity, int Mb
 	{
 		perror("Open device failure\n") ;
 		exit(-1) ;
-	} else   fcntl(fd, F_SETFL, 0);
+	} else
+		{
+			fcntl(fd, F_SETFL, 0);
+			timeout.tv_sec = 0;
+  			timeout.tv_usec = 1000;
+		}
 
 	/* save olds settings port */
 	if (tcgetattr (fd,&saved_tty_parameters) < 0)
@@ -387,7 +392,11 @@ uint8_t	readSpeed(int8_t address,uint16_t *speed)
 {
 	return readRegisters(address,ADDR_SPEED0_L, 1, speed);
 }
-
+/*###############################################*/
+uint8_t feedspeed(uint8_t address, uint16_t *speed)
+{
+	return readRegisters(address,FEEDBACK_SPEED_L, 1, speed);
+}
 /*########################################################################*/
 uint8_t writeRegister(uint8_t address, uint16_t writeAddress, uint16_t data16bit) 
 {
@@ -447,7 +456,7 @@ uint8_t readRegisters(uint8_t address, uint16_t readStartAddress, uint16_t dataL
 /*####################################################################################*/
 uint8_t readQuery(uint8_t address, uint8_t fnCode, uint8_t data[], uint16_t dataLen)
 {
-
+	int rv;
 	uint16_t queryLen = 0;
 	clock_t  start = clock();
 	const unsigned long timeoutMs = 10;
@@ -456,7 +465,15 @@ uint8_t readQuery(uint8_t address, uint8_t fnCode, uint8_t data[], uint16_t data
 	memset(&read_buf, '\0', BLVD20KM_QUERY_MAX_LEN);
     while( (clock() - start)/(double)(CLOCKS_PER_SEC / 1000) <= timeoutMs)
     {
-    	queryLen = read(fd, &read_buf, BLVD20KM_QUERY_MAX_LEN);
+    	FD_ZERO(&set); /* clear the set */
+	    FD_SET(fd, &set); /* add our file descriptor to the set */
+	    rv = select(fd +1, &set, NULL, NULL, &timeout);
+	    if(rv == -1)
+	      perror("select\n"); /* an error accured */
+	    else if(rv == 0)
+	      perror("timeout\n"); /* a timeout occured */
+	    else
+    		queryLen = read(fd, &read_buf, BLVD20KM_QUERY_MAX_LEN);
     	if(queryLen)
     		break;  		
   	}

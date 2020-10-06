@@ -71,6 +71,7 @@ int main(int argc, char **argv)
 	
 	while(ros::ok())
 	{
+		uint16_t encoder[2];
 		for(uint8_t i = 0x01; i <= 0x02; i++)
 		{
 			if(speed[i] >=0){
@@ -79,6 +80,7 @@ int main(int argc, char **argv)
 				writeReverse(i);
 			}
 			writeSpeed(i,abs(speed[i]));
+			feedspeed(i,&encoder[i]);
 		}	
  		ros::spinOnce();
 	}
