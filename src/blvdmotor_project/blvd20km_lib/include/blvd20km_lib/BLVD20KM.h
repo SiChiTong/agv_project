@@ -61,7 +61,6 @@ class BLVD20KM_hieplm
 		uint8_t writeSpeed(uint16_t speed);
 		uint8_t writeSpeedControlMode(uint16_t mode);
 		uint8_t writeTorqueLimit(uint16_t torque);
-
 		uint8_t writeDiagnosis();
 		uint8_t readAlarm(uint16_t *alarm);
 		uint8_t writeResetAlarm();

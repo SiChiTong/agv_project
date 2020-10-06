@@ -1,0 +1,11 @@
+<launch>
+
+  <node pkg="driver_blvd_controller" type="Navigation_control" name="Navigation_control" output="screen">
+  </node>
+  
+  <arg name="port" default="/dev/ttyUSB0"/>
+  <arg name="baud" default="115200"/>
+  <node pkg="driver_blvd_controller" type="blvd20km_controller" name="Driver_motor" args="$(arg port) $(arg baud)" output="screen">
+  </node>
+ 
+</launch>

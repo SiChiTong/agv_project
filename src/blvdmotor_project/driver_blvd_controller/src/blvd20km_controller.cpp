@@ -1,8 +1,21 @@
 #include <ros/ros.h>
 #include "mbrtu/modbusrtu.h"
 #include <geometry_msgs/Twist.h>
-#include "r2serial_driver/speed_wheel.h"
+#include <r2serial_driver/speed_wheel.h>
 #include "std_msgs/String.h"
+
+
+#define DEFAULT_BAUDRATE 115200
+#define DEFAULT_SERIALPORT "/dev/ttyUSB0"
+//Function Code
+#define     READ_COILS        0x01
+#define     READ_INPUT_BITS   0x02
+#define     READ_REGS         0x03
+#define     READ_INPUT_REGS   0x04
+#define     WRITE_COIL        0x05
+#define     WRITE_REG         0x06
+#define     WRITE_COILS       0x0F
+#define     WRITE_REGS        0x10
 // #include <boost/thread/thread.hpp>
 
 #define MOTOR_ADDRESS1 0X01
@@ -13,67 +26,64 @@
 #define rad_rpm        9.5492965964254
 #define L              0.255 // wheelbase (in meters per radian)
 #define R  			   0.075 //wheel radius (in meters per radian)
-#define w_max  		   4000 // speed maximum of moter befor gear
-#define w_min  		   80 // speed maximum of moter befor gear
 
-int16_t W_l, W_r; // speed befor gear 
-float k_v = 1; 	  // percent speed %
-float V_max ;     // speed max when percent speed = 100%  (m/s)
-float K = 30;          // He so chuyen
+static int speed[2];
 //Process ROS receive from navigation message, send to uController
-void cmd_velCallback(const geometry_msgs::Twist& msg)
+void navigationCallback(const r2serial_driver::speed_wheel& robot)
 {
-	float V;  // forward velocity (ie meters per second)
-	float W;  // angular velocity (ie radians per second)
-	float v_r; // clockwise angular velocity of right wheel (ie radians per second)
-	float v_l; // counter-clockwise angular velocity of left wheel (ie radians per second)
-	float w_r, w_l; // speed rad/s of one
-
-	V_max = msg.linear.x;  W = msg.angular.z;
-	V = V_max*k_v;
-
-	/* Van toc goc 2 banh */
-	w_r = ((2 * V) + (W * L)) / (2 * R);   //(rad/s)
-	w_l = ((2 * V) - (W * L)) / (2 * R);   //(rad/s)
-
-	/* Van toc 2 banh */
-	v_r = w_r*rad_rpm;  // (rpm)  
-	v_l = w_l*rad_rpm;  // (rpm) 
-
-	/* van toc truoc hop so */
-	W_r = v_r*K; 
-	W_l = v_l*K;
-	/* Kiem  tra van toc */
-	if(fabs(W_r) > w_max) W_r = w_max;
-	if(fabs(W_l) > w_max) W_l = w_max;
-
-	if(fabs(W_r) < w_min) W_r = 0;
-	if(fabs(W_l) < w_min) W_l = 0;
-
-	ROS_INFO("Wheel left: %d  Wheel right: %d", W_l, W_r);
-} //cmd_velCallback
-
+	speed[0] = robot.wheel_letf;
+    speed[1] = robot.wheel_right;
+}
 
 int main(int argc, char **argv)
 {
+	char port[30];    //port name
+  	int baud;     	  //baud rate 
+
+	strcpy(port, DEFAULT_SERIALPORT);
+	if (argc > 1)
+	 strcpy(port, argv[1]);
+
+	baud = DEFAULT_BAUDRATE;
+	if (argc > 2) {
+		if(sscanf(argv[2],"%d", &baud)!=1) {
+		  ROS_ERROR("ucontroller baud rate parameter invalid");
+		  return 1;
+		}
+	}
+	ROS_INFO("connection initializing (%s) at %d baud", port, baud);
 	/* onpen comport */
-	int fd = Mb_open_device("/dev/ttyUSB0",115200,1,8,1); /*even , 8 bit, 1 stop_bit*/
+	Mb_open_device(port,baud,1,8,1); /*even , 8 bit, 1 stop_bit*/
 	/*create ros node*/
 	ros::init(argc, argv, "Driver_motor");
 	ros::NodeHandle nh;
-	ros::Rate loop_rate(60);
 	/* Subscriber */
-    ros::Subscriber cmd_vel;
-	cmd_vel = nh.subscribe("cmd_vel", 10,cmd_velCallback);
-	while(ros::ok())
+    ros::Subscriber navigation;
+	navigation =  nh.subscribe("Navigation_control_cmd", 10,navigationCallback); 
+
+	for (uint8_t i = 0x01; i <= 0x02; i++)
 	{	
-		// writeRegister(fd,MOTOR_ADDRESS1,ADDR_SPEED0_L, 500);
-		// writeRegister(fd,MOTOR_ADDRESS1,ADDR_MOTOR_CONTROL, 
-		// 				createMotorControl16bit(MOTOR_DIRECTOIN_FORWARD,true,true,0));
- 		loop_rate.sleep();
+		writeSpeedControlMode(i,BLVD02KM_SPEED_MODE_USE_DIGITALS);
+		writeSpeed(i,BLVD20KM_SPEED_MIN);
+		writeResetAlarm(i);
+		writeStop(i);
+	}
+	
+	while(ros::ok())
+	{
+		for(uint8_t i = 0x01; i <= 0x02; i++)
+		{
+			if(speed[i] >=0){
+				writeForward(i);
+			}else{
+				writeReverse(i);
+			}
+			writeSpeed(i,abs(speed[i]));
+		}	
  		ros::spinOnce();
 	}
 
-	Mb_close_device(fd);
+	Mb_close_device();
 	return 0;
 }
+

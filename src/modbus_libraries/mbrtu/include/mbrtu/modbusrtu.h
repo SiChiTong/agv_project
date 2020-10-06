@@ -51,8 +51,8 @@
 #define MOTOR_DIRECTOIN_FORWARD 1
 #define MOTOR_DIRECTOIN_REVERSE 2
 
-#define MOTOR_FORWARD_BIT      0b00001000
-#define MOTOR_REVERSE_BIT      0b00010000
+#define MOTOR_FORWARD_BIT      0b10100000
+#define MOTOR_REVERSE_BIT      0b10001000
 #define MOTOR_SLOW_CHANGE_BIT  0b00100000
 #define MOTOR_FREE_ON_STOP_BIT 0b10000000
 
@@ -75,41 +75,39 @@
 
 #define BLVD02KM_SPEED_MODE_USE_DIGITALS 0x0001
 
-/* master structure */
-typedef struct {
-   int fd;											/* modbus device (serial port: /dev/ttyS0 ...) */
-   uint8_t address;											/* slave address */
-} Mbs_trame;
-
+int fd; 
 uint8_t uint8Buffer[41];
+uint16_t uint16Buffer[8];
 static struct termios saved_tty_parameters;					/* old serial port setting (restored on close) */
 static struct termios Mb_tio;								/* new serail port setting */
-int Mb_open_device(const char Mbc_port[], int Mbc_speed,		/* open device and configure it */	
+void Mb_open_device(const char Mbc_port[], int Mbc_speed,	/* open device and configure it */	
 					int Mbc_parity, int Mbc_bit_l,
 					int Mbc_bit_s);	
-void Mb_close_device(int Mb_device);						/* close device*/	
-void writeQuery(int fd, uint8_t address,uint8_t fnCode, uint8_t data[], uint16_t dataLen);
+void Mb_close_device();										/* close device*/	
+void writeQuery(uint8_t address,uint8_t fnCode, uint8_t data[], uint16_t dataLen);
 uint16_t uint8tsToUint16t(uint8_t chars[]);
-uint8_t readQuery(int fd, uint8_t address, uint8_t fnCode, uint8_t data[], uint16_t dataLen); 
-uint8_t writeRegister(int fd, uint8_t address,uint16_t writeAddress, uint16_t data16bit); 
-uint8_t readRegisters(int fd, uint8_t address,uint16_t readStartAddress, uint16_t dataLen, uint16_t registerData[]); 
-uint16_t getCRC16(uint8_t data_p[], uint16_t length);
+uint8_t readQuery(uint8_t address, uint8_t fnCode, uint8_t data[], uint16_t dataLen); 
+uint8_t writeRegister(uint8_t address,uint16_t writeAddress, uint16_t data16bit); 
+uint8_t readRegisters(uint8_t address,uint16_t readStartAddress, uint16_t dataLen, uint16_t registerData[]); 
+uint16_t getCRC16(uint8_t data_p[], uint16_t length, uint16_t poly);
+uint16_t createMotorControl16bit(uint8_t motorDirection);
 
-uint8_t writeConfigTrigger();
-uint8_t writeForward();
-uint8_t writeLock();
-uint8_t writeStop();
-uint8_t writeReverse();
-uint8_t readDirection(bool *forwarding, bool *reversing, bool *freeLockOnStop);
-uint8_t readSpeed(uint16_t *speed);
-uint8_t readSpeedControlMode(uint16_t *mode);
-uint8_t readTorque(uint16_t *torque);
-uint8_t readTorqueLimit(uint16_t *torque);
-uint8_t writeSpeed(uint16_t speed);
-uint8_t writeSpeedControlMode(uint16_t mode);
-uint8_t writeTorqueLimit(uint16_t torque);
-uint8_t writeDiagnosis();
-uint8_t readAlarm(uint16_t *alarm);
-uint8_t writeResetAlarm();
-uint16_t createMotorControl16bit(uint8_t motorDirection, bool freeLockOnStop, bool slowChange, uint8_t motorDataNum);
+uint8_t writeConfigTrigger(uint8_t address);
+uint8_t writeForward(uint8_t address);
+uint8_t writeLock(uint8_t address);
+uint8_t writeStop(uint8_t address);
+uint8_t writeReverse(uint8_t address);
+uint8_t writeSpeed(uint8_t address, uint16_t speed);
+uint8_t writeSpeedControlMode(uint8_t address, uint16_t mode);
+uint8_t writeDiagnosis(uint8_t address);
+uint8_t writeResetAlarm(uint8_t address);
+
+uint8_t readDirection(uint8_t address,bool *forwarding, bool *reversing, bool *freeLockOnStop);
+uint8_t readSpeed(uint8_t address,uint16_t *speed);
+uint8_t readSpeedControlMode(uint8_t address,uint16_t *mode);
+uint8_t readAlarm(uint8_t address,uint16_t *alarm);
+uint8_t readTorque(uint8_t address,uint16_t *torque);
+uint8_t readTorqueLimit(uint8_t address,uint16_t *torque);
+uint8_t readUint32t(uint8_t address,uint16_t readStartAddress, uint32_t *value);
+
 #endif //MODBUSPP_MODBUS_H

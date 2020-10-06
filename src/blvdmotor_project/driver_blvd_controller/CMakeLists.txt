@@ -37,9 +37,9 @@ add_dependencies(blvd20km_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catki
 target_link_libraries(blvd20km_controller ${catkin_LIBRARIES})
 
 #Navigation_cotrol
-add_executable(Navigation_cotrol src/Navigation_cotrol.cpp)
-add_dependencies(Navigation_cotrol ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(Navigation_cotrol ${catkin_LIBRARIES})
+add_executable(Navigation_control src/Navigation_control.cpp)
+add_dependencies(Navigation_control ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(Navigation_control ${catkin_LIBRARIES})
 
 include_directories(
 # include
