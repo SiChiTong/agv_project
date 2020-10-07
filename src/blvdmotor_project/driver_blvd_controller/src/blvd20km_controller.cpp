@@ -33,6 +33,7 @@ void navigationCallback(const r2serial_driver::speed_wheel& robot)
 {
 	speed[0] = robot.wheel_letf;
     speed[1] = robot.wheel_right;
+    ROS_INFO("Wheel left: %d  Wheel right: %d", speed[0], speed[1]);
 }
 
 int main(int argc, char **argv)
@@ -65,7 +66,7 @@ int main(int argc, char **argv)
 	{	
 		writeSpeedControlMode(i,BLVD02KM_SPEED_MODE_USE_DIGITALS);
 		writeSpeed(i,BLVD20KM_SPEED_MIN);
-		writeResetAlarm(i);
+		//writeResetAlarm(i);
 		writeStop(i);
 	}
 	
@@ -79,9 +80,10 @@ int main(int argc, char **argv)
 			}else{
 				writeReverse(i);
 			}
-			writeSpeed(i,abs(speed[i]));
-			feedspeed(i,&encoder[i]);
-		}	
+			writeSpeed(i,abs(speed[i-1]));
+			//readSpeed(i,&encoder[i-1]);
+		}
+		//ROS_INFO("%d , %d",(int)encoder[0],(int)encoder[1]);	
  		ros::spinOnce();
 	}
 

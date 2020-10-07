@@ -54,7 +54,7 @@
 #define MOTOR_DIRECTOIN_REVERSE 2
 
 #define MOTOR_FORWARD_BIT      0b10100000
-#define MOTOR_REVERSE_BIT      0b10001000
+#define MOTOR_REVERSE_BIT      0b10000000
 #define MOTOR_SLOW_CHANGE_BIT  0b00100000
 #define MOTOR_FREE_ON_STOP_BIT 0b10000000
 
@@ -78,8 +78,8 @@
 #define BLVD02KM_SPEED_MODE_USE_DIGITALS 0x0001
 
 int fd; 
-fd_set set;
-struct timeval timeout;
+// fd_set set;
+// struct timeval timeout;
 uint8_t uint8Buffer[41];
 uint16_t uint16Buffer[8];
 
