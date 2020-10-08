@@ -33,7 +33,7 @@ void navigationCallback(const r2serial_driver::speed_wheel& robot)
 {
 	speed[0] = robot.wheel_letf;
     speed[1] = robot.wheel_right;
-    ROS_INFO("Wheel left: %d  Wheel right: %d", speed[0], speed[1]);
+    //ROS_INFO("Wheel left: %d  Wheel right: %d", speed[0], speed[1]);
 }
 
 int main(int argc, char **argv)

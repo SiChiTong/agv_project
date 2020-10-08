@@ -84,8 +84,9 @@
 #define BLVD02KM_SPEED_MODE_USE_DIGITALS 0x0001
 
 int fd; 
-// fd_set set;
-// struct timeval timeout;
+int rv;
+fd_set set;
+struct timeval timeout;
 uint8_t uint8Buffer[41];
 uint16_t uint16Buffer[8];
 
