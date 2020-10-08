@@ -53,9 +53,8 @@
 #define MOTOR_DIRECTOIN_FORWARD 1
 #define MOTOR_DIRECTOIN_REVERSE 2
 
-#define MOTOR_FORWARD_BIT      0b10100000
-#define MOTOR_REVERSE_BIT      0b10000000
-#define MOTOR_SLOW_CHANGE_BIT  0b00100000
+#define MOTOR_FORWARD_BIT      0b00000000
+#define MOTOR_REVERSE_BIT      0b00100000
 #define MOTOR_FREE_ON_STOP_BIT 0b10000000
 
 #define BLVD20KM_QUERY_MAX_LEN 255
@@ -95,7 +94,7 @@ uint8_t readQuery(uint8_t address, uint8_t fnCode, uint8_t data[], uint16_t data
 uint8_t writeRegister(uint8_t address,uint16_t writeAddress, uint16_t data16bit); 
 uint8_t readRegisters(uint8_t address,uint16_t readStartAddress, uint16_t dataLen, uint16_t registerData[]); 
 uint16_t getCRC16(uint8_t data_p[], uint16_t length, uint16_t poly);
-uint16_t createMotorControl16bit(uint8_t motorDirection);
+uint16_t createMotorControl16bit(int8_t motorDirection,bool stop_free);
 
 uint8_t writeConfigTrigger(uint8_t address);
 uint8_t writeForward(uint8_t address);

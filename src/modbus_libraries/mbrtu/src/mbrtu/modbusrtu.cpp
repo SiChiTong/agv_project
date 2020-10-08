@@ -253,7 +253,7 @@ uint8_t writeConfigTrigger(uint8_t address)
 }
 
 /*###############################################*/
-uint16_t createMotorControl16bit(uint8_t motorDirection) 
+uint16_t createMotorControl16bit(uint8_t motorDirection,bool stop_free = true) 
 {
 	// MB-FREE, -, STOP-MODE, REV, FWD, M1, M2, M0
 	uint16_t bits = 0x0000;
@@ -267,6 +267,7 @@ uint16_t createMotorControl16bit(uint8_t motorDirection)
 		bits |= MOTOR_FORWARD_BIT;
 		break;
 	}
+	if(stop_free) bits |= MOTOR_FREE_ON_STOP_BIT;
 	return bits;
 }
 /*###############################################*/
@@ -473,7 +474,7 @@ uint8_t readQuery(uint8_t address, uint8_t fnCode, uint8_t data[], uint16_t data
 	    // else if(rv == 0)
 	    //   perror("timeout\n"); /* a timeout occured */
 	    // else
-    	// 	queryLen = read(fd, &read_buf, BLVD20KM_QUERY_MAX_LEN);
+    	queryLen = read(fd, &read_buf, BLVD20KM_QUERY_MAX_LEN);
     	if(queryLen)
     		break;  		
   	}
