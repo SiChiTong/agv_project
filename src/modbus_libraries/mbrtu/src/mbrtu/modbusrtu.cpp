@@ -253,13 +253,16 @@ uint8_t writeConfigTrigger(uint8_t address)
 }
 
 /*###############################################*/
-uint16_t createMotorControl16bit(uint8_t motorDirection,bool stop_free = true) 
+uint16_t createMotorControl16bit(uint8_t motorDirection) 
 {
 	// MB-FREE, -, STOP-MODE, REV, FWD, M1, M2, M0
 	uint16_t bits = 0x0000;
 
 	switch (motorDirection) 
 	{
+	case MOTOR_DIRECTOIN_STOP:
+		bits |= MOTOR_FREE_ON_STOP_BIT;
+		break;
 	case MOTOR_DIRECTOIN_REVERSE:
 		bits |= MOTOR_REVERSE_BIT;
 		break;
@@ -267,7 +270,6 @@ uint16_t createMotorControl16bit(uint8_t motorDirection,bool stop_free = true)
 		bits |= MOTOR_FORWARD_BIT;
 		break;
 	}
-	if(stop_free) bits |= MOTOR_FREE_ON_STOP_BIT;
 	return bits;
 }
 /*###############################################*/

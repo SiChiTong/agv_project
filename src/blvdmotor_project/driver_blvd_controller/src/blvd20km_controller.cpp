@@ -65,9 +65,8 @@ int main(int argc, char **argv)
 	for (uint8_t i = 1; i < 3; i++)
 	{	
 		writeSpeedControlMode(i,BLVD02KM_SPEED_MODE_USE_DIGITALS);
-		writeSpeed(i,BLVD20KM_SPEED_MIN);
-		writeResetAlarm(i);
-		writeStop(i);
+		// writeSpeed(i,BLVD20KM_SPEED_MIN);
+		// writeStop(i);
 	}
 	uint8_t tick;
 	while(ros::ok())
@@ -79,10 +78,7 @@ int main(int argc, char **argv)
 				writeForward(i);
 			}else if(speed[i-1] < 0){
 				writeReverse(i); 
-			}else{
-				writeStop(i);
 			}
-
 			writeSpeed(i,abs(speed[i-1]));
 		}
 		//ROS_INFO("%d , %d",(int)encoder[0],(int)encoder[1]);	
