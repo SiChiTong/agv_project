@@ -83,8 +83,7 @@ int main(int argc, char **argv)
     robot.wheel_letf = W_l;
     robot.wheel_right = -W_r;
     Navigation_control.publish(robot);
-    robot.wheel_letf = 0;
-    robot.wheel_right = 0;
+    W_r = W_l= 0;
     loop_rate.sleep();
     ros::spinOnce();
   }

@@ -253,24 +253,27 @@ uint8_t writeConfigTrigger(uint8_t address)
 }
 
 /*###############################################*/
-uint16_t createMotorControl16bit(uint8_t motorDirection) 
-{
-	// MB-FREE, -, STOP-MODE, REV, FWD, M1, M2, M0
-	uint16_t bits = 0x0000;
-
-	switch (motorDirection) 
-	{
-	case MOTOR_DIRECTOIN_STOP:
-		bits |= MOTOR_FREE_ON_STOP_BIT;
-		break;
-	case MOTOR_DIRECTOIN_REVERSE:
-		bits |= MOTOR_REVERSE_BIT;
-		break;
-	case MOTOR_DIRECTOIN_FORWARD:
-		bits |= MOTOR_FORWARD_BIT;
-		break;
-	}
-	return bits;
+uint16_t createMotorControl16bit(uint8_t motorDirection, bool freeLockOnStop = true, bool slowChange = true, uint8_t motorDataNum = 0) {
+  // MB-FREE, -, STOP-MODE, REV, FWD, M1, M2, M0
+  uint16_t bits = 0x0000;
+  switch (motorDirection) {
+  case MOTOR_DIRECTOIN_REVERSE:
+    bits |= MOTOR_REVERSE_BIT;
+    break;
+  case MOTOR_DIRECTOIN_FORWARD:
+    bits |= MOTOR_FORWARD_BIT;
+    break;
+  }
+  if (freeLockOnStop) {
+    bits |= MOTOR_FREE_ON_STOP_BIT;
+  }
+  if (slowChange) {
+    bits |= MOTOR_SLOW_CHANGE_BIT;
+  }
+  if (motorDataNum != 0 && motorDataNum < 0b1000) {
+    bits |= motorDataNum;
+  }
+  return bits;
 }
 /*###############################################*/
 uint8_t writeForward(uint8_t address) 
@@ -463,7 +466,7 @@ uint8_t readQuery(uint8_t address, uint8_t fnCode, uint8_t data[], uint16_t data
 	uint16_t queryLen = 0;
 	clock_t  start = clock();
 	const unsigned long timeoutMs = 10;
-
+	usleep(C3_5_time); //delay ms
 	uint8_t read_buf [BLVD20KM_QUERY_MAX_LEN];
 	memset(&read_buf, '\0', BLVD20KM_QUERY_MAX_LEN);
     while( (clock() - start)/(double)(CLOCKS_PER_SEC / 1000) <= timeoutMs)

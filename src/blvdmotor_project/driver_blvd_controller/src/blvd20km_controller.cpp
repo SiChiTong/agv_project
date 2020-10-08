@@ -24,8 +24,8 @@
 
 #define Pi 			   3.1415926535
 #define rad_rpm        9.5492965964254
-#define L              0.255 // wheelbase (in meters per radian)
-#define R  			   0.075 //wheel radius (in meters per radian)
+#define L              0.5 // wheelbase (in meters per radian)
+#define R  			   0.085 //wheel radius (in meters per radian)
 
 static int speed[2];
 //Process ROS receive from navigation message, send to uController
@@ -65,13 +65,12 @@ int main(int argc, char **argv)
 	for (uint8_t i = 1; i < 3; i++)
 	{	
 		writeSpeedControlMode(i,BLVD02KM_SPEED_MODE_USE_DIGITALS);
-		// writeSpeed(i,BLVD20KM_SPEED_MIN);
-		// writeStop(i);
+		writeSpeed(i,BLVD20KM_SPEED_MIN);
+		writeStop(i);
 	}
-	uint8_t tick;
+
 	while(ros::ok())
 	{
-		//uint16_t encoder[2];
 		for(uint8_t i = 1; i < 3; i++)
 		{
 			if(speed[i-1] > 0){
@@ -81,7 +80,6 @@ int main(int argc, char **argv)
 			}
 			writeSpeed(i,abs(speed[i-1]));
 		}
-		//ROS_INFO("%d , %d",(int)encoder[0],(int)encoder[1]);	
  		ros::spinOnce();
 	}
 
