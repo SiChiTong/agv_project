@@ -3,6 +3,7 @@ project(fx5u_hardware)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  diagnostic_msgs
 )
 
 catkin_package(

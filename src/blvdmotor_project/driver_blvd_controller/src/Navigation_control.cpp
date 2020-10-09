@@ -1,7 +1,7 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include <geometry_msgs/Twist.h>
-#include "r2serial_driver/speed_wheel.h"
+#include "driver_blvd_controller/speed_wheel.h"
 #include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,24 +52,22 @@ void cmd_velCallback(const geometry_msgs::Twist& msg)
   if(abs(W_r) < BLVD20KM_SPEED_MIN) W_r = 0;
   if(abs(W_l) < BLVD20KM_SPEED_MIN) W_l = 0;
   lastCmdVelReceived = clock();
-  //ROS_INFO("Wheel left: %d  Wheel right: %d", W_l, W_r);
+  ROS_INFO("Wheel left: %d  Wheel right: %d", W_l, W_r);
 } //cmd_velCallback
-
 
 int main(int argc, char **argv)
 {
   /**
    Khoi tao Node 
    */
-  r2serial_driver::speed_wheel robot;
+  driver_blvd_controller::speed_wheel robot;
   ros::init(argc, argv, "Navigation_control");
   ros::NodeHandle nh;
-  ros::Rate loop_rate(40);
+  ros::Rate loop_rate(20);
 
   /* Publisher */
   ros::Publisher Navigation_control;
-  Navigation_control = nh.advertise<r2serial_driver::speed_wheel>("Navigation_control_cmd", 1000);
-
+  Navigation_control = nh.advertise<driver_blvd_controller::speed_wheel>("Navigation_control_cmd", 1000);
 
   /* Subscriber */
   ros::Subscriber cmd_vel;
@@ -83,7 +81,7 @@ int main(int argc, char **argv)
     robot.wheel_letf = W_l;
     robot.wheel_right = -W_r;
     Navigation_control.publish(robot);
-    W_r = W_l= 0;
+    //W_r = W_l= 0;
     loop_rate.sleep();
     ros::spinOnce();
   }

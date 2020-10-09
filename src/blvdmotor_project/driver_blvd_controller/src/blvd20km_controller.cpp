@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include "mbrtu/modbusrtu.h"
 #include <geometry_msgs/Twist.h>
-#include <r2serial_driver/speed_wheel.h>
+#include <driver_blvd_controller/speed_wheel.h>
 #include "std_msgs/String.h"
 
 
@@ -29,7 +29,7 @@
 
 static int speed[2];
 //Process ROS receive from navigation message, send to uController
-void navigationCallback(const r2serial_driver::speed_wheel& robot)
+void navigationCallback(const driver_blvd_controller::speed_wheel& robot)
 {
 	speed[0] = robot.wheel_letf;
     speed[1] = robot.wheel_right;
@@ -58,6 +58,7 @@ int main(int argc, char **argv)
 	/*create ros node*/
 	ros::init(argc, argv, "Driver_motor");
 	ros::NodeHandle nh;
+	ros::Rate loop_rate(20);
 	/* Subscriber */
     ros::Subscriber navigation;
 	navigation =  nh.subscribe("Navigation_control_cmd", 10,navigationCallback); 
@@ -80,6 +81,7 @@ int main(int argc, char **argv)
 			}
 			writeSpeed(i,abs(speed[i-1]));
 		}
+		loop_rate.sleep();
  		ros::spinOnce();
 	}
 
