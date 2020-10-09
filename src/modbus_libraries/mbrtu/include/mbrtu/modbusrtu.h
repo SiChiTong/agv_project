@@ -49,6 +49,11 @@
 #define ADDR_ANALOG_MODE_L   0x10e3
 #define ADDR_CONFIG_H        0x018c
 #define ADDR_CONFIG_L        0x018d
+#define ADDR_ACCELERATION0_H 0x0600
+#define ADDR_ACCELERATION0_L 0x0601
+#define ADDR_DECELERATION0_H 0x0680
+#define ADDR_DECELERATION0_L 0x0681
+
 #define MOTOR_DIRECTOIN_STOP    0
 #define MOTOR_DIRECTOIN_FORWARD 1
 #define MOTOR_DIRECTOIN_REVERSE 2
@@ -113,6 +118,8 @@ uint8_t writeSpeed(uint8_t address, uint16_t speed);
 uint8_t writeSpeedControlMode(uint8_t address, uint16_t mode);
 uint8_t writeDiagnosis(uint8_t address);
 uint8_t writeResetAlarm(uint8_t address);
+uint8_t writeAcceleration(uint8_t address, uint16_t time);
+uint8_t writeDeceleration(uint8_t address, uint16_t time);
 
 uint8_t readDirection(uint8_t address,bool *forwarding, bool *reversing, bool *freeLockOnStop);
 uint8_t readSpeed(uint8_t address,uint16_t *speed);
@@ -121,5 +128,5 @@ uint8_t readAlarm(uint8_t address,uint16_t *alarm);
 uint8_t readTorque(uint8_t address,uint16_t *torque);
 uint8_t readTorqueLimit(uint8_t address,uint16_t *torque);
 uint8_t readUint32t(uint8_t address,uint16_t readStartAddress, uint32_t *value);
-uint8_t feedspeed(uint8_t address, uint16_t *speed);
+uint8_t feedbackSpeed(uint8_t address, uint16_t *speed);
 #endif //MODBUSPP_MODBUS_H

@@ -47,17 +47,22 @@ int main(int argc, char **argv)
     ros::Publisher cmd_PLC;
      cmd_PLC = nh.advertise<diagnostic_msgs::DiagnosticStatus>("PLC_infomation", 1000);
     uint16_t bitM[10];
+    uint16_t m1m2m3[3] = {OFF,OFF,OFF};
     while(ros::ok())
     {   
-        fx5uc->modbus_read_holding_registers(0, 1,bitM)     
+        fx5uc->modbus_read_holding_registers(0, 1,bitM);    
         if(bitM[0] == ON)// Nếu M0 on 
         {
-            if(bitM[5])device.D[1] = NO_CL;
+            if(bitM[5]) device.D[1] = NO_CL;
             else if(bitM[6]){
                 device.D[1] = RED;
-                
+                m1m2m3[1] = OFF;m1m2m3[2] = ON;m1m2m3[3] = OFF;
             }
-            else if(bitM[7])device.D[1] = BULE;
+            else if(bitM[7]){
+                device.D[1] = BULE;
+                m1m2m3[1] = ON;m1m2m3[2] = OFF;m1m2m3[3] = OFF;
+            }
+            fx5uc->modbus_write_registers(Mbit+1, 3,m1m2m3); 
             fx5uc->modbus_write_register(0, device.D[1]); 
         }  
         diagnomic_reg();

@@ -298,7 +298,16 @@ uint8_t writeSpeed(uint8_t address,uint16_t speed)
 {
 	return writeRegister(address,ADDR_SPEED0_L, speed);
 }
-
+/*###############################################*/
+uint8_t writeAcceleration(uint8_t address, uint16_t time)
+{
+	return writeRegister(address,ADDR_ACCELERATION0_L, time);
+}
+/*###############################################*/
+uint8_t writeDeceleration(uint8_t address, uint16_t time)
+{
+	return writeRegister(address,ADDR_DECELERATION0_L, time);
+}
 /*###############################################*/
 uint8_t writeTorqueLimit(uint8_t address,uint16_t torque) 
 {
@@ -399,7 +408,7 @@ uint8_t	readSpeed(int8_t address,uint16_t *speed)
 	return readRegisters(address,ADDR_SPEED0_L, 1, speed);
 }
 /*###############################################*/
-uint8_t feedspeed(uint8_t address, uint16_t *speed)
+uint8_t feedbackSpeed(uint8_t address, uint16_t *speed)
 {
 	return readRegisters(address,FEEDBACK_SPEED_L, 1, speed);
 }

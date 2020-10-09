@@ -17,11 +17,11 @@
 #define L  0.255 // wheelbase (in meters per radian)
 #define R  0.075 //wheel radius (in meters per radian)
 int16_t W_l, W_r; // speed befor gear 
-static clock_t lastCmdVelReceived;
-static const uint64_t speedTimeout = 100 * CLOCKS_PER_SEC / 1000;
-
+clock_t start;
+const unsigned long timeoutMs = 2; //sec
 void cmd_velCallback(const geometry_msgs::Twist& msg)
 {
+  start = clock();
   float k_v = 1;    // percent speed %
   float V_max ;     // speed max when percent speed = 100%  (m/s)
   float K = 30;          // He so chuyen
@@ -51,8 +51,7 @@ void cmd_velCallback(const geometry_msgs::Twist& msg)
 
   if(abs(W_r) < BLVD20KM_SPEED_MIN) W_r = 0;
   if(abs(W_l) < BLVD20KM_SPEED_MIN) W_l = 0;
-  lastCmdVelReceived = clock();
-  ROS_INFO("Wheel left: %d  Wheel right: %d", W_l, W_r);
+  //ROS_INFO("Wheel left: %d  Wheel right: %d", W_l, W_r);
 } //cmd_velCallback
 
 int main(int argc, char **argv)
@@ -63,7 +62,7 @@ int main(int argc, char **argv)
   driver_blvd_controller::speed_wheel robot;
   ros::init(argc, argv, "Navigation_control");
   ros::NodeHandle nh;
-  ros::Rate loop_rate(20);
+  ros::Rate loop_rate(60);
 
   /* Publisher */
   ros::Publisher Navigation_control;
@@ -81,7 +80,9 @@ int main(int argc, char **argv)
     robot.wheel_letf = W_l;
     robot.wheel_right = -W_r;
     Navigation_control.publish(robot);
-    //W_r = W_l= 0;
+
+    if((clock() - start)/CLOCKS_PER_SEC >= timeoutMs) 
+        W_r = W_l= 0;
     loop_rate.sleep();
     ros::spinOnce();
   }
