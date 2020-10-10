@@ -6,7 +6,7 @@ using namespace std;
 int main(int argc, char **argv)
 {
     // create a modbus object
-    modbus *fx5uc = new modbus("192.168.10.11", 502);
+    modbus *fx5uc = new modbus("192.168.1.51", 502);
     // set slave id
     fx5uc->modbus_set_slave_id(1);
     // connect with the server
@@ -32,9 +32,9 @@ int main(int argc, char **argv)
         //write single reg                 function 0x06
         fx5uc->modbus_write_register(0, 123);
         // write multiple coils             function 0x0F
-        bool write_cols[16] = {true, true, true, true, true, true, true, true,true,
+        bool write_coils[16] = {true, true, true, true, true, true, true, true,true,
                                          true, true, true, true, true, true, true}; 
-        fx5uc->modbus_write_coils(1,1,write_cols);
+        fx5uc->modbus_write_coils(1,1,write_coils);
         // write multiple regs              function 0x10
         uint16_t write_regs[4] = {123, 123, 123};
         fx5uc->modbus_write_registers(0, 4, write_regs);

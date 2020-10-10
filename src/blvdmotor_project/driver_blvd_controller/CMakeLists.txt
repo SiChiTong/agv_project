@@ -5,6 +5,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   geometry_msgs
+  tf
+  nav_msgs
   message_generation
   mbrtu
 )
@@ -39,6 +41,11 @@ target_link_libraries(blvd20km_controller ${catkin_LIBRARIES})
 add_executable(Navigation_control src/Navigation_control.cpp)
 add_dependencies(Navigation_control ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(Navigation_control ${catkin_LIBRARIES})
+
+#odometry
+add_executable(odometry src/odometry.cpp)
+add_dependencies(odometry ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(odometry ${catkin_LIBRARIES})
 
 include_directories(
 # include

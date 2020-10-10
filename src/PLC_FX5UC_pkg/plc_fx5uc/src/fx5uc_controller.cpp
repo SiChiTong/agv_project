@@ -42,29 +42,34 @@ int main(int argc, char **argv)
     /* create ros ndoe */
     ros::init(argc, argv, "PLC_control");
     ros::NodeHandle nh;
-    ros::Rate loop_rate(60);
+    ros::Rate loop_rate(20);
     /* Publisher */
     ros::Publisher cmd_PLC;
      cmd_PLC = nh.advertise<diagnostic_msgs::DiagnosticStatus>("PLC_infomation", 1000);
-    uint16_t bitM[10];
-    uint16_t m1m2m3[3] = {OFF,OFF,OFF};
+    bool bitM[10];
+    bool m1m2m3[3] = {OFF,OFF,OFF};
     while(ros::ok())
     {   
-        fx5uc->modbus_read_holding_registers(0, 1,bitM);    
+        fx5uc->modbus_read_coils(Mbit, 10,bitM); 
+        ROS_INFO("M0 = %d M5 = %d M6 = %d M7 = %d",bitM[0],bitM[5],bitM[6],bitM[7]);  
         if(bitM[0] == ON)// Nếu M0 on 
         {
-            if(bitM[5]) device.D[1] = NO_CL;
-            else if(bitM[6]){
+            if(bitM[5] == ON){
+                device.D[1] = NO_CL;
+                m1m2m3[1] = ON; m1m2m3[2] = OFF; m1m2m3[3] = OFF;
+            }
+
+            else if(bitM[6] == ON){
                 device.D[1] = RED;
                 m1m2m3[1] = OFF;m1m2m3[2] = ON;m1m2m3[3] = OFF;
             }
-            else if(bitM[7]){
+            else if(bitM[7]== ON){
                 device.D[1] = BULE;
                 m1m2m3[1] = ON;m1m2m3[2] = OFF;m1m2m3[3] = OFF;
             }
-            fx5uc->modbus_write_registers(Mbit+1, 3,m1m2m3); 
+            fx5uc->modbus_write_coils(Mbit+1, 3,m1m2m3); 
             fx5uc->modbus_write_register(0, device.D[1]); 
-        }  
+        } else ROS_INFO("not listen"); 
         diagnomic_reg();
         cmd_PLC.publish(plc_msg);                                           
         loop_rate.sleep();
