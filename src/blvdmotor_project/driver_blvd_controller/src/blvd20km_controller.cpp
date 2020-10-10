@@ -17,16 +17,18 @@
 #define R  			   0.085 //wheel radius (in meters per radian)
 
 static int speed[2];
-static uint16_t alarm_status[2], encoder_value[2];
+static uint16_t alarm_status[2], encoder_value[2], warning_status[2];
 //Process ROS receive from navigation message, send to uController
 void navigationCallback(const driver_blvd_controller::speed_wheel& robot)
 {
 	speed[0] = robot.wheel_letf;
     speed[1] = robot.wheel_right;
     for(int i= 0; i<4; i++) ROS_INFO("  ");
-    ROS_INFO("Wheel left: %d  Wheel right: %d", speed[0], speed[1]);
-	ROS_INFO("encoder_value[0] = %d encoder_value[1] = %d",(int16_t)encoder_value[0],(int16_t)encoder_value[1]);
-	ROS_INFO("alarm_status[0] = %x alarm_status[1] = %x",alarm_status[0],alarm_status[1]);
+    ROS_INFO("                 Wheel left      Wheel right");
+    ROS_INFO("Command speed :  %d              %d", speed[0], speed[1]);
+	ROS_INFO("Feedback speed:  %d              %d",(int16_t)encoder_value[0],(int16_t)encoder_value[1]);
+	ROS_INFO("Warning record:  %x              %x",warning_status[0],warning_status[1]);
+	ROS_INFO("Alarm record  :  %x              %x",alarm_status[0],alarm_status[1]);
 	for(int i= 0; i<40; i++) ROS_INFO("  ");
 }
 
@@ -60,7 +62,7 @@ int main(int argc, char **argv)
 	for (uint8_t i = 1; i < 3; i++)
 	{	
 		writeSpeedControlMode(i,BLVD02KM_SPEED_MODE_USE_DIGITALS);
-		writeAcceleration(i,3);
+		writeAcceleration(i,2);
 		writeDeceleration(i,1);
 		writeSpeed(i,BLVD20KM_SPEED_MIN);
 		writeStop(i);
@@ -76,8 +78,9 @@ int main(int argc, char **argv)
 				writeReverse(i); 
 			}
 			writeSpeed(i,abs(speed[i-1]));
-			readAlarm(i,&alarm_status[i-1]);
 			feedbackSpeed(i,&encoder_value[i-1]);
+			readAlarm(i,&alarm_status[i-1]);
+			readWarning(i,&warning_status[i-1]);
 		}
 		encoder.wheel_letf = (double)(encoder_value[0]/30);
 		encoder.wheel_right = (double)(encoder_value[1]/30);

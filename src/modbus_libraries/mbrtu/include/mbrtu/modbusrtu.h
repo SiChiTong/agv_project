@@ -15,6 +15,7 @@
 #include <termios.h> /* POSIX terminal control definitions */
 #include <time.h>	 /* delay */
 #include <cstdint>	 /* uin8_t */
+#include <sys/stat.h>
 
 ///Function Code
 // #define     READ_COILS        0x01
@@ -41,6 +42,8 @@
 #define ADDR_SPEED0_L        0x0481
 #define FEEDBACK_SPEED_H	 0x00CE
 #define FEEDBACK_SPEED_L	 0x00CF
+#define ADDR_WARNING_H		 0x0098
+#define ADDR_WARNING_L		 0x0099
 #define ADDR_TORQUE_H        0x0700
 #define ADDR_TORQUE_L        0x0701
 #define ADDR_TORQUE_LIMIT0_H 0x0700
@@ -88,10 +91,14 @@
 
 #define BLVD02KM_SPEED_MODE_USE_DIGITALS 0x0001
 
+/* prameter serial*/
 int fd; 
 int rv;
+char *port_name; 
+struct stat sb;
 fd_set set;
 struct timeval timeout;
+
 uint8_t uint8Buffer[41];
 uint16_t uint16Buffer[8];
 
@@ -125,6 +132,7 @@ uint8_t readDirection(uint8_t address,bool *forwarding, bool *reversing, bool *f
 uint8_t readSpeed(uint8_t address,uint16_t *speed);
 uint8_t readSpeedControlMode(uint8_t address,uint16_t *mode);
 uint8_t readAlarm(uint8_t address,uint16_t *alarm);
+uint8_t readWarning(uint8_t address,uint16_t *warning);
 uint8_t readTorque(uint8_t address,uint16_t *torque);
 uint8_t readTorqueLimit(uint8_t address,uint16_t *torque);
 uint8_t readUint32t(uint8_t address,uint16_t readStartAddress, uint32_t *value);

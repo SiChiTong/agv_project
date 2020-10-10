@@ -86,6 +86,7 @@ device descriptor
 ************************************************************************************/
 void Mb_open_device(const char Mbc_port[], int Mbc_speed, int Mbc_parity, int Mbc_bit_l, int Mbc_bit_s)
 {
+	//strcpy(port_name,Mbc_port);
 	/* open port */
 	fd = open(Mbc_port,O_RDWR | O_NOCTTY | O_NONBLOCK | O_NDELAY) ;
 	if(fd<0)
@@ -351,6 +352,11 @@ uint8_t readAlarm(uint8_t address,uint16_t *alarm)
 }
 
 /*###############################################*/
+uint8_t readWarning(uint8_t address,uint16_t *warning) 
+{
+	return readRegisters(address,ADDR_WARNING_L, 1, warning);
+}
+/*###############################################*/
 uint8_t readDirection(uint8_t address,bool *forwarding, bool *reversing, bool *freeLockOnStop) 
 {
 	uint16_t data;
@@ -477,6 +483,7 @@ uint8_t readQuery(uint8_t address, uint8_t fnCode, uint8_t data[], uint16_t data
 	usleep(C3_5_time); //delay ms
 	uint8_t read_buf [BLVD20KM_QUERY_MAX_LEN];
 	memset(&read_buf, '\0', BLVD20KM_QUERY_MAX_LEN);
+	//printf("%d\n", stat("/dev/ttyUSB0", &sb));
     while( (clock() - start)/(double)(CLOCKS_PER_SEC / 1000) <= timeoutMs)
     {
     	// FD_ZERO(&set); /* clear the set */
