@@ -96,8 +96,6 @@ void Mb_open_device(const char Mbc_port[], int Mbc_speed, int Mbc_parity, int Mb
 	} else
 		{
 			fcntl(fd, F_SETFL, 0);
-			// timeout.tv_sec = 0;
-  			// timeout.tv_usec = 10000;
 		}
 
 	/* save olds settings port */
@@ -484,16 +482,18 @@ uint8_t readQuery(uint8_t address, uint8_t fnCode, uint8_t data[], uint16_t data
 	uint8_t read_buf [BLVD20KM_QUERY_MAX_LEN];
 	memset(&read_buf, '\0', BLVD20KM_QUERY_MAX_LEN);
 	//printf("%d\n", stat("/dev/ttyUSB0", &sb));
+	timeout.tv_sec = 5;
+	timeout.tv_usec = 10000;
     while( (clock() - start)/(double)(CLOCKS_PER_SEC / 1000) <= timeoutMs)
     {
-    	// FD_ZERO(&set); /* clear the set */
-	    // FD_SET(fd, &set); /* add our file descriptor to the set */
-	    // rv = select(fd +1, &set, NULL, NULL, &timeout);
-	   	// if(rv == -1)
-	    //  	perror("select\n"); /* an error accured */
-	    // else if(rv == 0)
-	    //  	perror("timeout\n");  /* an timeout occured */ 
-	    // else
+    	FD_ZERO(&set); /* clear the set */
+	    FD_SET(fd, &set); /* add our file descriptor to the set */
+	    rv = select(fd +1, &set, NULL, NULL, &timeout);
+	   	if(rv == -1)
+	     	perror("select\n"); /* an error accured */
+	    else if(rv == 0)
+	     	perror("timeout\n");  /* an timeout occured */ 
+	    else
     		queryLen = read(fd, &read_buf, BLVD20KM_QUERY_MAX_LEN);
     	if(queryLen)
     		break;  		
