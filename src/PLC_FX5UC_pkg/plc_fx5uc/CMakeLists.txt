@@ -9,10 +9,6 @@ find_package(catkin REQUIRED COMPONENTS
   fx5u_hardware
 )
 
-add_message_files(
-  FILES
-)
-
 generate_messages(
    DEPENDENCIES
    std_msgs

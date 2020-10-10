@@ -26,20 +26,24 @@
 #define L              0.5 // wheelbase (in meters per radian)
 #define R  			   0.085 //wheel radius (in meters per radian)
 
-int speed[2];
+static int speed[2];
+static uint16_t alarm_status[2], encoder_value[2];
 //Process ROS receive from navigation message, send to uController
 void navigationCallback(const driver_blvd_controller::speed_wheel& robot)
 {
 	speed[0] = robot.wheel_letf;
     speed[1] = robot.wheel_right;
+    for(int i= 0; i<4; i++) ROS_INFO("  ");
     ROS_INFO("Wheel left: %d  Wheel right: %d", speed[0], speed[1]);
+	ROS_INFO("encoder_value[0] = %d encoder_value[1] = %d",(int16_t)encoder_value[0],(int16_t)encoder_value[1]);
+	ROS_INFO("alarm_status[0] = %x alarm_status[1] = %x",alarm_status[0],alarm_status[1]);
+	for(int i= 0; i<40; i++) ROS_INFO("  ");
 }
 
 int main(int argc, char **argv)
 {
 	char port[30];    //port name
   	int baud;     	  //baud rate 
-  	uint16_t alarm_status[2], encoder_value[2];
 	strcpy(port, DEFAULT_SERIALPORT);
 	if (argc > 1)
 	 strcpy(port, argv[1]);
@@ -66,7 +70,7 @@ int main(int argc, char **argv)
 	{	
 		writeSpeedControlMode(i,BLVD02KM_SPEED_MODE_USE_DIGITALS);
 		writeAcceleration(i,3);
-		writeDeceleration(i,3);
+		writeDeceleration(i,1);
 		writeSpeed(i,BLVD20KM_SPEED_MIN);
 		writeStop(i);
 	}
@@ -84,12 +88,12 @@ int main(int argc, char **argv)
 			readAlarm(i,&alarm_status[i-1]);
 			feedbackSpeed(i,&encoder_value[i-1]);
 		}
-		ROS_INFO("encoder_value[0] = %d encoder_value[1] = %d",(int)encoder_value[0],(int)encoder_value[1]);
 		loop_rate.sleep();
  		ros::spinOnce();
 	}
 
-	//Mb_close_device();
+	Mb_close_device();
+
 	return 0;
 }
 

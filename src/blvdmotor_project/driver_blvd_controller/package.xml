@@ -60,7 +60,6 @@
   <build_export_depend>std_msgs</build_export_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>std_msgs</exec_depend>
-  <depend>blvd20km_lib</depend>
   <depend>mbrtu</depend>
 
   <!-- The export tag contains other, unspecified, tags -->

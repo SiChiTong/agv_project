@@ -26,7 +26,7 @@
 // #define     WRITE_COILS       0x0F
 // #define     WRITE_REGS        0x10
 
-#define C3_5_time 2000
+#define C3_5_time 3000
 
 #define FN_CODE_READ        0x03
 #define FN_CODE_WRITE       0x06

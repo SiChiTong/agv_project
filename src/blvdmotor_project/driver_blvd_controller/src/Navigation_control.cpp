@@ -18,7 +18,7 @@
 #define R  0.075 //wheel radius (in meters per radian)
 int16_t W_l, W_r; // speed befor gear 
 clock_t start;
-const unsigned long timeoutMs = 2; //sec
+const unsigned long timeoutMs = 1; //sec
 void cmd_velCallback(const geometry_msgs::Twist& msg)
 {
   start = clock();
