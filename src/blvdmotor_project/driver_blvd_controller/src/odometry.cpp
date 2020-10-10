@@ -1,12 +1,12 @@
 #include "ros/ros.h"
-#include <driver_blvd_controller/.h>
+#include <driver_blvd_controller/speed_wheel.h>
 #include <tf/transform_broadcaster.h>
 #include <nav_msgs/Odometry.h>
 
 long _PreviousLeftEncoderCounts = 0;
 long _PreviousRightEncoderCounts = 0;
 ros::Time current_time_encoder, last_time_encoder;
-double DistancePerCount = (3.14159265 * 0.1524) / 64000;
+#define rad_rpm 9.5492965964254
 
 double x;
 double y;
@@ -18,21 +18,12 @@ double vth;
 double deltaLeft;
 double deltaRight;
 
-void WheelCallback(const geometry_msgs::Vector3::ConstPtr& ticks)
+void WheelCallback(const driver_blvd_controller::speed_wheel& encoder)
 {
 
-  current_time_encoder = ros::Time::now();
+  vx = encoder.wheel_letf / rad_rpm;
+  vy = encoder.wheel_right / rad_rpm;
 
-  deltaLeft = ticks->x - _PreviousLeftEncoderCounts;
-  deltaRight = ticks->y - _PreviousRightEncoderCounts;
-
-  vx = deltaLeft * DistancePerCount; // (current_time_encoder - last_time_encoder).toSec();
-  vy = deltaRight * DistancePerCount; // (current_time_encoder - last_time_encoder).toSec();
-
-
-  _PreviousLeftEncoderCounts = ticks->x;
-  _PreviousRightEncoderCounts = ticks->y;
-  last_time_encoder = current_time_encoder;
 }
 
 int main(int argc, char **argv)
@@ -47,7 +38,6 @@ int main(int argc, char **argv)
   ros::Time current_time, last_time;
   current_time = ros::Time::now();
   last_time = ros::Time::now();
-
 
   ros::Rate r(1.0);
   while(n.ok()){

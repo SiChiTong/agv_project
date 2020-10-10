@@ -2,20 +2,10 @@
 #include "mbrtu/modbusrtu.h"
 #include <geometry_msgs/Twist.h>
 #include <driver_blvd_controller/speed_wheel.h>
-
+// #include <boost/thread/thread.hpp>
 
 #define DEFAULT_BAUDRATE 115200
 #define DEFAULT_SERIALPORT "/dev/ttyUSB0"
-//Function Code
-#define     READ_COILS        0x01
-#define     READ_INPUT_BITS   0x02
-#define     READ_REGS         0x03
-#define     READ_INPUT_REGS   0x04
-#define     WRITE_COIL        0x05
-#define     WRITE_REG         0x06
-#define     WRITE_COILS       0x0F
-#define     WRITE_REGS        0x10
-// #include <boost/thread/thread.hpp>
 
 #define MOTOR_ADDRESS1 0X01
 #define MOTOR_ADDRESS2 0X02
@@ -42,6 +32,7 @@ void navigationCallback(const driver_blvd_controller::speed_wheel& robot)
 
 int main(int argc, char **argv)
 {
+	driver_blvd_controller::speed_wheel encoder;
 	char port[30];    //port name
   	int baud;     	  //baud rate 
 	strcpy(port, DEFAULT_SERIALPORT);
@@ -63,9 +54,9 @@ int main(int argc, char **argv)
 	ros::NodeHandle nh;
 	ros::Rate loop_rate(20);
 	/* Subscriber */
-    ros::Subscriber navigation;
-	navigation =  nh.subscribe("Navigation_control_cmd", 10,navigationCallback); 
-
+    ros::Subscriber navigation =  nh.subscribe("Navigation_control_cmd", 10,navigationCallback); 
+    /* Publisher */
+    ros::Publisher speed_wheel = nh.advertise<driver_blvd_controller::speed_wheel>("wheel_encoder", 100);
 	for (uint8_t i = 1; i < 3; i++)
 	{	
 		writeSpeedControlMode(i,BLVD02KM_SPEED_MODE_USE_DIGITALS);
@@ -88,6 +79,9 @@ int main(int argc, char **argv)
 			readAlarm(i,&alarm_status[i-1]);
 			feedbackSpeed(i,&encoder_value[i-1]);
 		}
+		encoder.wheel_letf = (double)(encoder_value[0]/30);
+		encoder.wheel_right = (double)(encoder_value[1]/30);
+		speed_wheel.publish(encoder);
 		loop_rate.sleep();
  		ros::spinOnce();
 	}
