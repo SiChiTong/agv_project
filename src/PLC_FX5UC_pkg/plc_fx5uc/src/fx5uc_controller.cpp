@@ -6,7 +6,7 @@ using namespace std;
 
 #define RED 1
 #define GREEN 2
-#define BULE 5
+#define BULE 6
 #define YELLOW 3 
 #define NO_CL 0
 
@@ -51,21 +51,21 @@ int main(int argc, char **argv)
     while(ros::ok())
     {   
         fx5uc->modbus_read_coils(Mbit, 10,bitM); 
-        ROS_INFO("M0 = %d M5 = %d M6 = %d M7 = %d",bitM[0],bitM[5],bitM[6],bitM[7]);  
+        //ROS_INFO("M0 = %d M5 = %d M6 = %d M7 = %d",bitM[0],bitM[5],bitM[6],bitM[7]);  
         if(bitM[0] == ON)// Nếu M0 on 
         {
             if(bitM[5] == ON){
                 device.D[1] = NO_CL;
-                m1m2m3[1] = ON; m1m2m3[2] = OFF; m1m2m3[3] = OFF;
+                m1m2m3[0] = ON; m1m2m3[1] = OFF; m1m2m3[2] = OFF;
             }
 
             else if(bitM[6] == ON){
                 device.D[1] = RED;
-                m1m2m3[1] = OFF;m1m2m3[2] = ON;m1m2m3[3] = OFF;
+                m1m2m3[0] = ON;m1m2m3[1] = ON;m1m2m3[2] = OFF;
             }
             else if(bitM[7]== ON){
                 device.D[1] = BULE;
-                m1m2m3[1] = ON;m1m2m3[2] = OFF;m1m2m3[3] = OFF;
+                m1m2m3[0] = ON;m1m2m3[1] = OFF;m1m2m3[2] = OFF;
             }
             fx5uc->modbus_write_coils(Mbit+1, 3,m1m2m3); 
             fx5uc->modbus_write_register(0, device.D[1]); 
