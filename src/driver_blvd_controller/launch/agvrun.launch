@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
-  <node pkg="driver_blvd_controller" type="Navigation_control" name="Navigation_control" output="screen">
+  <node pkg="driver_blvd_controller" type="Navigation_control" name="Echo_navigation" output="screen">
   </node>
   
   <arg name="port" default="/dev/AGV-BLDV20KM"/>

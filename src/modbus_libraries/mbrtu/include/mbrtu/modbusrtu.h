@@ -15,11 +15,8 @@
 #include <termios.h> /* POSIX terminal control definitions */
 #include <time.h>	 /* delay */
 #include <cstdint>	 /* uin8_t */
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <dirent.h>
-#include <errno.h>
-#include <vector>
+#include <stdlib.h>
+
 
 #define DEFAULT_BAUDRATE 115200
 #define DEFAULT_SERIALPORT "/dev/AGV-BLDV20KM"
@@ -97,10 +94,8 @@ int fd;
 int rv;
 fd_set set;
 struct timeval timeout;
-static struct stat sb;
 static struct termios saved_tty_parameters;					/* old serial port setting (restored on close) */
 static struct termios Mb_tio;
-static ssize_t check_connect;
 
 /* buffer */ 
 uint8_t uint8Buffer[41];

@@ -60,13 +60,13 @@ int main(int argc, char **argv)
    Khoi tao Node 
    */
   driver_blvd_controller::speed_wheel robot;
-  ros::init(argc, argv, "Navigation_control");
+  ros::init(argc, argv, "Echo_navigation");
   ros::NodeHandle nh;
-  ros::Rate loop_rate(60);
+  ros::Rate loop_rate(20);
 
   /* Publisher */
   ros::Publisher Navigation_control;
-  Navigation_control = nh.advertise<driver_blvd_controller::speed_wheel>("Navigation_control_cmd", 1000);
+  Navigation_control = nh.advertise<driver_blvd_controller::speed_wheel>("cmd_vel_to_wheel", 1000);
 
   /* Subscriber */
   ros::Subscriber cmd_vel;

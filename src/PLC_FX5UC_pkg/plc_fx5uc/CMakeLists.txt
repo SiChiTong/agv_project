@@ -4,14 +4,10 @@ project(plc_fx5uc)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
+  diagnostic_msgs
   message_generation
   mbtcp
   fx5u_hardware
-)
-
-generate_messages(
-   DEPENDENCIES
-   std_msgs
 )
 
 catkin_package(

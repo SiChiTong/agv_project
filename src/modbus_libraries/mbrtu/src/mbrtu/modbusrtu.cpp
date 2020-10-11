@@ -2,35 +2,6 @@
 
 #define POLY   0xA001
 
-
-/************************************************************************************
-		function... might want it in some class?
-*************************************************************************************
-input :
---------  
-dir	   : forder name 
-flie   : list file in forder name
-answer : 0 if not error
---------
-************************************************************************************/
-// static string dir = string("/dev/");
-// static vector<string> files = vector<string>();
-// int getdir (char* dir, vector<char*> &files)
-// {
-//     DIR *dp;
-//     struct dirent *dirp;
-//     if((dp  = opendir(dir.c_str())) == NULL) {
-//         cout << "Error(" << errno << ") opening " << dir << endl;
-//         return errno;
-//     }
-
-//     while ((dirp = readdir(dp)) != NULL) {
-//         files.push_back(string(dirp->d_name));
-//     }
-//     closedir(dp);
-//     return 0;
-// }
-
 /************************************************************************************
 		Mb_calcul_crc : compute the crc of a packet and put it at the end
 *************************************************************************************
@@ -463,7 +434,7 @@ uint8_t writeRegister(uint8_t address, uint16_t writeAddress, uint16_t data16bit
 						(uint8_t)(data16bit >> 8),
 						(uint8_t)(data16bit & 0xFF)
 					 };
-	check_connect = writeQuery(address, FN_CODE_WRITE, data, 4);
+	writeQuery(address, FN_CODE_WRITE, data, 4);
 	return readQuery(address, FN_CODE_WRITE, data, 4);
 }
 
@@ -488,9 +459,7 @@ ssize_t writeQuery(uint8_t address,uint8_t fnCode, uint8_t data[], uint16_t data
 		msg[i] = queryBuffer[i];
 	/* clean port */
 	tcflush(fd, TCIFLUSH);
-	// check_connect = stat(DEFAULT_SERIALPORT, &sb);
-	// if(check_connect ==0)
-  	return write(fd,msg,(size_t)queryLen);
+  	write(fd,msg,(size_t)queryLen);
 }
 
 /*##############################################################3##################*/
@@ -518,10 +487,8 @@ uint8_t readQuery(uint8_t address, uint8_t fnCode, uint8_t data[], uint16_t data
 	uint16_t queryLen = 0;
 	clock_t  start = clock();
 	const unsigned long timeoutMs = 20;
-	//usleep(10); //delay ms
 	uint8_t read_buf [BLVD20KM_QUERY_MAX_LEN];
 	memset(&read_buf, '\0', BLVD20KM_QUERY_MAX_LEN);
-	//printf("%d\n", stat("/dev/ttyUSB0", &sb));
 	timeout.tv_sec = 2;
 	timeout.tv_usec = 500000;
     while( (clock() - start)/(double)(CLOCKS_PER_SEC / 1000) <= timeoutMs)
