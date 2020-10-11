@@ -306,7 +306,7 @@ uint16_t createMotorControl16bit(uint8_t motorDirection, bool freeLockOnStop = t
 /*###############################################*/
 uint8_t writeForward(uint8_t address) 
 {
-	return writeRegister(address,ADDR_MOTOR_CONTROL, createMotorControl16bit(MOTOR_DIRECTOIN_FORWARD));
+	return writeRegister(address,ADDR_MOTOR_CONTROL, createMotorControl16bit(MOTOR_DIRECTOIN_FORWARD,false));
 }
 
 /*###############################################*/
@@ -318,7 +318,7 @@ uint8_t writeStop(uint8_t address)
 /*###############################################*/
 uint8_t writeReverse(uint8_t address) 
 {
-	return writeRegister(address,ADDR_MOTOR_CONTROL, createMotorControl16bit(MOTOR_DIRECTOIN_REVERSE));
+	return writeRegister(address,ADDR_MOTOR_CONTROL, createMotorControl16bit(MOTOR_DIRECTOIN_REVERSE,false));
 }
 
 /*###############################################*/
@@ -518,7 +518,7 @@ uint8_t readQuery(uint8_t address, uint8_t fnCode, uint8_t data[], uint16_t data
 	uint16_t queryLen = 0;
 	clock_t  start = clock();
 	const unsigned long timeoutMs = 20;
-	//usleep(C3_5_time); //delay ms
+	//usleep(10); //delay ms
 	uint8_t read_buf [BLVD20KM_QUERY_MAX_LEN];
 	memset(&read_buf, '\0', BLVD20KM_QUERY_MAX_LEN);
 	//printf("%d\n", stat("/dev/ttyUSB0", &sb));

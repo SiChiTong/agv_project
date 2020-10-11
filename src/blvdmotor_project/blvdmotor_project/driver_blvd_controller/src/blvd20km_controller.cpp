@@ -29,7 +29,7 @@ void navigationCallback(const driver_blvd_controller::speed_wheel& robot)
 		ROS_INFO("Feedback speed:  %d              %d",(int16_t)encoder_value[0],(int16_t)encoder_value[1]);
 		ROS_INFO("Warning record:  %x              %x",warning_status[0],warning_status[1]);
 		ROS_INFO("Alarm record  :  %x              %x",alarm_status[0],alarm_status[1]);
-		for(int i= 0; i<45; i++) ROS_INFO("  ");
+		
     } 	    
 }
 
@@ -69,14 +69,13 @@ int main(int argc, char **argv)
 		{
 			for (uint8_t i = 1; i < 3; i++)
 			{	
-				writeResetAlarm(i);
-				sleep(1); 
+				writeResetAlarm(i); 
 				writeSpeedControlMode(i,BLVD02KM_SPEED_MODE_USE_DIGITALS);
 				writeAcceleration(i,2);
 				writeDeceleration(i,1);
 				writeSpeed(i,BLVD20KM_SPEED_MIN);
 				writeStop(i);
-				clearAlarmRecords(i);
+				clearAlarmRecords(i); 
 				clearWarningRecords(i);
 			}
 		}
@@ -84,8 +83,8 @@ int main(int argc, char **argv)
 		while(ros::ok())
 		{
 			if(stat(DEFAULT_SERIALPORT, &sb) != 0){
-				for(int i= 0; i<51; i++) ROS_INFO("  ");
-				ROS_INFO("Disconnected");
+				// for(int i= 0; i<51; i++) ROS_INFO("  ");
+				 ROS_INFO("Disconnected");
 				break;
 			} 
 

@@ -24,7 +24,7 @@
 #define DEFAULT_BAUDRATE 115200
 #define DEFAULT_SERIALPORT "/dev/AGV-BLDV20KM"
 
-#define C3_5_time 3000
+#define C3_5_time 10000
 #define FN_CODE_READ        0x03
 #define FN_CODE_WRITE       0x06
 #define FN_CODE_DIAGNOSIS   0x08
