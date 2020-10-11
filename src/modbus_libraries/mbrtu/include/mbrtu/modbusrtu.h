@@ -16,19 +16,15 @@
 #include <time.h>	 /* delay */
 #include <cstdint>	 /* uin8_t */
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <errno.h>
+#include <vector>
 
-///Function Code
-// #define     READ_COILS        0x01
-// #define     READ_INPUT_BITS   0x02
-// #define     READ_REGS         0x03
-// #define     READ_INPUT_REGS   0x04
-// #define     WRITE_COIL        0x05
-// #define     WRITE_REG         0x06
-// #define     WRITE_COILS       0x0F
-// #define     WRITE_REGS        0x10
+#define DEFAULT_BAUDRATE 115200
+#define DEFAULT_SERIALPORT "/dev/AGV-BLDV20KM"
 
 #define C3_5_time 3000
-
 #define FN_CODE_READ        0x03
 #define FN_CODE_WRITE       0x06
 #define FN_CODE_DIAGNOSIS   0x08
@@ -56,6 +52,11 @@
 #define ADDR_ACCELERATION0_L 0x0601
 #define ADDR_DECELERATION0_H 0x0680
 #define ADDR_DECELERATION0_L 0x0681
+
+#define ADDR_CLEAR_ALARM_RECORDS_H   0x0184
+#define ADDR_CLEAR_ALARM_RECORDS_L	 0x0185
+#define ADDR_CLEAR_WARNING_RECORDS_H 0x0186
+#define ADDR_CLEAR_WARNING_RECORDS_L 0x0187
 
 #define MOTOR_DIRECTOIN_STOP    0
 #define MOTOR_DIRECTOIN_FORWARD 1
@@ -94,21 +95,22 @@
 /* prameter serial*/
 int fd; 
 int rv;
-char *port_name; 
-struct stat sb;
 fd_set set;
 struct timeval timeout;
+static struct stat sb;
+static struct termios saved_tty_parameters;					/* old serial port setting (restored on close) */
+static struct termios Mb_tio;
+static ssize_t check_connect;
 
+/* buffer */ 
 uint8_t uint8Buffer[41];
 uint16_t uint16Buffer[8];
-
-static struct termios saved_tty_parameters;					/* old serial port setting (restored on close) */
-static struct termios Mb_tio;								/* new serail port setting */
+								/* new serail port setting */
 void Mb_open_device(const char Mbc_port[], int Mbc_speed,	/* open device and configure it */	
 					int Mbc_parity, int Mbc_bit_l,
 					int Mbc_bit_s);	
 void Mb_close_device();										/* close device*/	
-void writeQuery(uint8_t address,uint8_t fnCode, uint8_t data[], uint16_t dataLen);
+ssize_t writeQuery(uint8_t address,uint8_t fnCode, uint8_t data[], uint16_t dataLen);
 uint16_t uint8tsToUint16t(uint8_t chars[]);
 uint8_t readQuery(uint8_t address, uint8_t fnCode, uint8_t data[], uint16_t dataLen); 
 uint8_t writeRegister(uint8_t address,uint16_t writeAddress, uint16_t data16bit); 
@@ -125,6 +127,8 @@ uint8_t writeSpeed(uint8_t address, uint16_t speed);
 uint8_t writeSpeedControlMode(uint8_t address, uint16_t mode);
 uint8_t writeDiagnosis(uint8_t address);
 uint8_t writeResetAlarm(uint8_t address);
+uint8_t clearAlarmRecords(uint8_t address);
+uint8_t clearWarningRecords(uint8_t address);
 uint8_t writeAcceleration(uint8_t address, uint16_t time);
 uint8_t writeDeceleration(uint8_t address, uint16_t time);
 
