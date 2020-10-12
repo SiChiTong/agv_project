@@ -280,19 +280,19 @@ uint16_t createMotorControl16bit(uint8_t motorDirection, bool freeLockOnStop = t
 /*###############################################*/
 uint8_t writeForward(uint8_t address) 
 {
-	return writeRegister(address,ADDR_MOTOR_CONTROL, createMotorControl16bit(MOTOR_DIRECTOIN_FORWARD));
+	return writeRegister(address,ADDR_MOTOR_CONTROL, createMotorControl16bit(MOTOR_DIRECTOIN_FORWARD,true,false));
 }
 
 /*###############################################*/
 uint8_t writeStop(uint8_t address) 
 {
-	return writeRegister(address,ADDR_MOTOR_CONTROL, createMotorControl16bit(MOTOR_DIRECTOIN_STOP,false));
+	return writeRegister(address,ADDR_MOTOR_CONTROL, createMotorControl16bit(MOTOR_DIRECTOIN_STOP,false,false));
 }
 
 /*###############################################*/
 uint8_t writeReverse(uint8_t address) 
 {
-	return writeRegister(address,ADDR_MOTOR_CONTROL, createMotorControl16bit(MOTOR_DIRECTOIN_REVERSE));
+	return writeRegister(address,ADDR_MOTOR_CONTROL, createMotorControl16bit(MOTOR_DIRECTOIN_REVERSE,true,false));
 }
 
 /*###############################################*/
