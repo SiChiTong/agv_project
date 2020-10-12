@@ -18,6 +18,7 @@ char port[30];    //port name
 int baud;     	  //baud rate 
 int check_connect;
 struct stat sb;
+clock_t begin;
 
 //Process ROS receive from navigation message, send to uController
 void navigationCallback(const driver_blvd_controller::speed_wheel& robot)
@@ -114,16 +115,16 @@ int main(int argc, char **argv)
 	strcpy(port, argv[2]);
 
 	/* spawn another thread */
-	int rate_b = 20; // 20 Hz
-	boost::thread thread_one(infomationLeftDriver, &rate_b);
-
+	// int rate_b = 20; // 20 Hz
+	// boost::thread thread_one(infomationLeftDriver, &rate_b);
+ 
 	/*create ros node*/
 	ros::init(argc, argv, "Driver_motor");
 	ros::NodeHandlePtr nh = boost::make_shared<ros::NodeHandle>();
 	/* Subscriber */
     ros::Subscriber navigation =  nh->subscribe("cmd_vel_to_wheel", 10,navigationCallback); 
     /* Publisher */
-    driver_blvd_controller::speed_wheel encoder;
+    //driver_blvd_controller::speed_wheel encoder;
     ros::Publisher speed_wheel = nh->advertise<driver_blvd_controller::speed_wheel>("wheel_encoder", 10);
 	
 	ros::Rate loop_rate(20); 
@@ -139,18 +140,23 @@ int main(int argc, char **argv)
 			{	
 				writeResetAlarm(i); 
 				writeSpeedControlMode(i,BLVD02KM_SPEED_MODE_USE_DIGITALS);
-				writeAcceleration(i,2);
-				writeDeceleration(i,1);
+				writeAcceleration(i,5);
+				writeDeceleration(i,2);
 				writeSpeed(i,BLVD20KM_SPEED_MIN);
 				writeStop(i);
 				clearAlarmRecords(i); 
 				clearWarningRecords(i);
 			}
 		}
-			
+		sleep(1);
 		while(ros::ok())
 		{
-			check_connect = stat(DEFAULT_SERIALPORT, &sb);
+			if((clock() - begin)/CLOCKS_PER_SEC >= 1)
+			{
+				check_connect = stat(DEFAULT_SERIALPORT, &sb);
+				begin = clock();
+			} 
+				
 			if(check_connect != 0){
 				for(int i= 0; i<4; i++) ROS_INFO("  ");
 				ROS_INFO("Disconnected");
@@ -163,16 +169,16 @@ int main(int argc, char **argv)
 					writeForward(i);
 				}else if(speed[i-1] < 0){
 					writeReverse(i); 
-				}
+				}else writeStop(i);
 				writeSpeed(i,abs(speed[i-1]));
 				feedbackSpeed(i,&feedback_speed[i-1]);
 				readAlarm(i,&alarm_status[i-1]);
 				readWarning(i,&warning_status[i-1]);
 			}
 
-			encoder.wheel_letf = (double)(feedback_speed[0]/30);
-			encoder.wheel_right = (double)(feedback_speed[1]/30);
-			speed_wheel.publish(encoder);
+			// encoder.wheel_letf = (double)(feedback_speed[0]/30);
+			// encoder.wheel_right = (double)(feedback_speed[1]/30);
+			//speed_wheel.publish(encoder);
 			loop_rate.sleep();
 			ros::spinOnce();
 		}
@@ -180,7 +186,7 @@ int main(int argc, char **argv)
 		Mb_close_device();
 		sleep(2);
 	}
-	thread_one.join();
+	//thread_one.join();
 
 	return 0;
 }
