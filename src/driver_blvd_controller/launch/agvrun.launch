@@ -4,15 +4,13 @@
   <node pkg="driver_blvd_controller" type="Navigation_control" name="Echo_navigation" output="screen">
   </node>
   
-
-  <node pkg="driver_blvd_controller" type="blvd20km_controller" name="Driver_motor_1" args="1 /dev/AGV-BLVD20KM-1 115200" output="screen">
+  <node pkg="driver_blvd_controller" type="blvd20km_controller" name="Driver_motor_1" args="1 /dev/ttyS3 115200" output="screen">
   </node>
 
- 
-  <node pkg="driver_blvd_controller" type="blvd20km_controller" name="Driver_motor_2" args="2 /dev/AGV-BLVD20KM-2 115200" output="screen">
+  <node pkg="driver_blvd_controller" type="blvd20km_controller" name="Driver_motor_2" args="2 /dev/ttyS4 115200" output="screen">
   </node>
  
 <!--    <node pkg="driver_blvd_controller" type="odometry" name="odometry_publisher" output="screen"> 
-   </node> --> 
+</node> --> 
 
 </launch>
