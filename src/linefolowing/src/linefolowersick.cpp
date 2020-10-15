@@ -41,13 +41,13 @@ float v_min_wheel; 				// speed maximum of moter behind gear
 float Lt;						// Dường kính vòng cua
 float V;  						// forward velocity (ie meters per second)
 float K;  						// He so chuyen banh răng
-int16_t W_l, W_r; 				// speed befor gear]
+int W_l, W_r; 				// speed befor gear]
 
 bool line_good;
 uint8_t track_level;
 uint8_t error_register;
 int8_t direct = 0;
-
+int8_t dir = 0;
 
 void teleop_keyCallback(const geometry_msgs::Twist& msg)
 {
@@ -122,7 +122,7 @@ void mlsCallback(const linefolowing::MLS_Measurement& msg)
 	float v_r; // clockwise angular velocity of right wheel (ie radians per second)
 	float v_l; // counter-clockwise angular velocity of left wheel (ie radians per second)
 
-	if(direct !=0)
+	if(direct == dir)
 	{
 		if(msg.position[2] > 0)
 		{	
@@ -148,14 +148,14 @@ void mlsCallback(const linefolowing::MLS_Measurement& msg)
 	v_l = ((1 - (L*angle_error)/(2*Lt)) * (V/R)) * rad_rpm;
 	v_r = ((1 + (L*angle_error)/(2*Lt)) * (V/R)) * rad_rpm;
 	
-	W_l = (int16_t)v_l*K;
+	W_l = (int)v_l*K;
 	if(W_l > v_max_wheel) W_l = v_max_wheel;
 	if(W_l < v_min_wheel) W_l = 0;
 
-	W_r = (int16_t)v_r*K;
+	W_r = (int)v_r*K;
 	if(W_r > v_max_wheel) W_r = v_max_wheel;
 	if(W_r < v_min_wheel) W_r = 0;
-	
+	ROS_INFO("Banh trai = %d Banh phai = %d",W_l, W_r);
 	
 } //echo_line_previousCallback
 
@@ -221,7 +221,6 @@ int main(int argc, char **argv)
 	sprintf(param,"/consept_mls%d/K",ucIndex);
   	n.getParam(param,K);
 
-	int8_t dir = 0;
   	strcpy(direction, DEFAULT_DIRECTION);
   	if (argc > 2) strcpy(direction, argv[2]);
   	
@@ -237,11 +236,11 @@ int main(int argc, char **argv)
 
 	/* Publisher */
 	ros::Publisher speedwheel;
-	speedwheel = n.advertise<linefolowing::speed_wheel>("cmd_vel_to_wheel", 20);
+	speedwheel = n.advertise<linefolowing::speed_wheel>("cmd_vel_to_wheel", 60);
 
 	/* Subscriber position line */
-	ros::Subscriber mls = n.subscribe(topicSubscribe, 10,mlsCallback);
-	ros::Subscriber teleop_key = n.subscribe("cmd_vel", 10,teleop_keyCallback);
+	ros::Subscriber mls = n.subscribe(topicSubscribe, 60,mlsCallback);
+	ros::Subscriber teleop_key = n.subscribe("cmd_vel", 60,teleop_keyCallback);
 	 
 	/* clock */
 	clock_t begin_time = clock();
@@ -253,9 +252,9 @@ int main(int argc, char **argv)
 		{
 			if(float(clock()-begin_time)/CLOCKS_PER_SEC*1000  >= 0.1) // 10 ms
 			{
-				if(present_speed < present_speed_setting) Gacceleration(0.03);
-				else if(present_speed > present_speed_setting) Deceleration(0.03);
-				else present_speed = present_speed_setting;
+				if(present_speed < present_speed_setting) Gacceleration(0.035);
+					else if(present_speed > present_speed_setting) Deceleration(0.03);
+						else present_speed = present_speed_setting;
 				begin_time = clock();
 				//ROS_INFO("Line %d present_speed = %f",ucIndex, present_speed);
 			}
@@ -270,7 +269,7 @@ int main(int argc, char **argv)
 				    robot.wheel_letf = 0;
 				    robot.wheel_right = 0;
 				}
-			ROS_INFO("Banh trai = %d Banh phai = %d",robot.wheel_letf, robot.wheel_right);
+			//ROS_INFO("Banh trai = %d Banh phai = %d",robot.wheel_letf, robot.wheel_right);
 			speedwheel.publish(robot);
 		}
 
