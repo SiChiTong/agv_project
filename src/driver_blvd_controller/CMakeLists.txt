@@ -51,6 +51,6 @@ add_dependencies(odometry ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_
 target_link_libraries(odometry ${catkin_LIBRARIES})
 
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
 )

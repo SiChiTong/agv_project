@@ -28,42 +28,25 @@ void Deceleration(const float step);
 /* CallBack Subcriber */
 #define Pi 3.1415926535
 #define rad_rpm 9.5492965964254
-// #define L 0.255 // khoang cach 2 banh
-// #define Lm 0.355 // Khoang cach  tu tam truc banh den tam do line 
-// #define R 0.075 //wheel radius (in meters per radian)
-// #define v_max_wheel 100 // speed maximum of moter behind gear
-// #define v_min_wheel 0 // speed maximum of moter behind gear
-// #define Lt 0.09
 
 //Global data
+float present_speed;  		 	// percent speed %
+float present_speed_setting; 	// percent speed setting
+float speed_setting; 			// speed max when percent speed = 100%  (m/s)
+float L; 						// khoang cach 2 banh
+float Lm; 						// Khoang cach  tu tam truc banh den tam do line 
+float R; 						//wheel radius (in meters per radian)
+float v_max_wheel; 				// speed maximum of moter behind gear
+float v_min_wheel; 				// speed maximum of moter behind gear
+float Lt;						// Dường kính vòng cua
+float V;  						// forward velocity (ie meters per second)
+float K;  						// He so chuyen banh răng
+int16_t W_l, W_r; 				// speed befor gear]
 
-float present_speed; // percent speed %
-float present_speed_setting; //percent speed setting
-float speed_setting; // speed max when percent speed = 100%  (m/s)
-float L; // khoang cach 2 banh
-float Lm; // Khoang cach  tu tam truc banh den tam do line 
-float R; //wheel radius (in meters per radian)
-float v_max_wheel; // speed maximum of moter behind gear
-float v_min_wheel; // speed maximum of moter behind gear
-float Lt;
-
-int ucIndex; //ucontroller index number
 bool line_good;
 uint8_t track_level;
 uint8_t error_register;
-int16_t W_l, W_r; // speed befor gear]
-int8_t dir = 1;
-int8_t mode;
-float buff_v = present_speed; 
-
-void teleop_keyCallback(const geometry_msgs::Twist& msg)
-{
-
-	speed_setting = msg.linear.x;
-	mode = int8_t(msg.linear.y);
-	//ROS_INFO("%f",V_max);
-
-}//teleop_keyCallback
+int8_t dir; 
 
 void mlsCallback(const r2serial_driver::MLS_Measurement& msg)
 {
@@ -124,42 +107,25 @@ void mlsCallback(const r2serial_driver::MLS_Measurement& msg)
 	/* Error register */
 	error_register = msg.error;
 
-
-	float V;  // forward velocity (ie meters per second)
 	float speed;
 	float angle_error; // goc lech 
 	float W;  // angular velocity (ie radians per second)
 	float v_r; // clockwise angular velocity of right wheel (ie radians per second)
 	float v_l; // counter-clockwise angular velocity of left wheel (ie radians per second)
-
-	// if(msg.position[0] == 0 && msg.position[2] == 0) 
-	// {
-	// 	present_speed_setting = 1 - fabs(msg.position[1])*6;
-	// 	if(present_speed_setting < 0.3) present_speed_setting = 0.3;
-
-	// }else if(msg.position[0] != 0 && msg.position[2] != 0)
-	// 	{
-	// 		present_speed_setting = (fabs(msg.position[0]) - fabs(msg.position[1]))*6; 
-	// 		if(present_speed_setting > 1 ) present_speed_setting =1;
-	// 		else if(present_speed_setting < 0.3) present_speed_setting = 0.3;
-	// 	} 
-		
-	V = fabs(speed_setting*present_speed); // V cai dat 
 	
+	V = abs(speed_setting*present_speed); // V cai dat 
 	angle_error = atan(msg.position[1]/Lm);
-	
 	v_l = ((1 - (L*angle_error)/(2*Lt)) * (V/R)) * rad_rpm;
-	if(fabs(v_l) > v_max_wheel) v_l = v_max_wheel;
-	if(fabs(v_l) < v_min_wheel) v_l = 0;
-
 	v_r = ((1 + (L*angle_error)/(2*Lt)) * (V/R)) * rad_rpm;
-	if(fabs(v_r) > v_max_wheel) v_r = v_max_wheel;
-	if(fabs(v_r) < v_min_wheel) v_r = 0;
+	
+	W_l = (int16_t)v_l*K;
+	if(W_l > v_max_wheel) W_l = v_max_wheel;
+	if(W_l < v_min_wheel) W_l = 0;
 
-	W_l = (v_l/v_max_wheel)*3000;
-	W_r = (v_r/v_max_wheel)*3000;
-
-
+	W_r = (int16_t)v_r*K;
+	if(W_r > v_max_wheel) W_r = v_max_wheel;
+	if(W_r < v_min_wheel) W_r = 0;
+	
 } //echo_line_previousCallback
 
 /* MAIN */
@@ -170,11 +136,12 @@ int main(int argc, char **argv)
  	char topicSubscribe[20];
     char topicPublish[20];
     char param[70];
+	int ucIndex; 					//ucontroller index number
 
     /***Create Node */
 	ros::init(argc, argv, "MLS_Line_Sick_Forward");
 	ros::NodeHandle n;	
-	ros::Rate loop_rate(60);
+	ros::Rate loop_rate(20);
 	r2serial_driver::speed_wheel robot;
     robot.start = false;
 
@@ -191,11 +158,11 @@ int main(int argc, char **argv)
 			    ROS_ERROR("Not connect mls%d !!",ucIndex);
 			    return 1;
 	  		}
-    }else 
-     	{
-		    strcpy(topicSubscribe, "mls0");
-		    strcpy(topicPublish, "speedwheel0");
-  		}
+	}else 
+		{
+			strcpy(topicSubscribe, "mls0");
+			strcpy(topicPublish, "speedwheel0");
+		}
 
   	sprintf(param,"/consept_mls%d/present_speed_setting",ucIndex);
   	n.getParam(param,present_speed_setting);
@@ -211,6 +178,10 @@ int main(int argc, char **argv)
   	n.getParam(param,v_max_wheel);
   	sprintf(param,"/consept_mls%d/v_min_wheel",ucIndex);
   	n.getParam(param,v_min_wheel);
+	sprintf(param,"/consept_mls%d/Speed",ucIndex);
+  	n.getParam(param,speed_setting);
+	sprintf(param,"/consept_mls%d/K",ucIndex);
+  	n.getParam(param,K);
 
   	strcpy(direction, DEFAULT_DIRECTION);
   	if (argc > 2) strcpy(direction, argv[2]);
@@ -227,60 +198,45 @@ int main(int argc, char **argv)
 
 	/* Publisher */
 	ros::Publisher speedwheel;
-	speedwheel = n.advertise<r2serial_driver::speed_wheel>(topicPublish, 1000);
+	speedwheel = n.advertise<r2serial_driver::speed_wheel>(topicPublish, 20);
 
 	/* Subscriber position line */
 	ros::Subscriber mls;
-	ros::Subscriber teleop_key;
-
 	mls = n.subscribe(topicSubscribe, 10,mlsCallback);  
-	teleop_key = n.subscribe("cmd_vel", 10,teleop_keyCallback);
-	
 	clock_t begin_time = clock();
-	clock_t end_time;
 
 	while (ros::ok())
 	{
 		/* This is a message object. You stuff it with data, and then publish it. */
-		end_time = clock();
-		if(float(end_time-begin_time)/CLOCKS_PER_SEC*1000  >= 0.1) // 10 ms
+	    if(int8_t(speed_setting/abs(speed_setting)) == dir)
 		{
-			if(present_speed < present_speed_setting) Gacceleration(0.01);
-			else if(present_speed > present_speed_setting) Deceleration(0.02);
-			else present_speed = present_speed_setting;
-			
-			begin_time = clock();
-		}
-
-	    robot.error = error_register;
-	    robot.start = true;
-	
-	    if(int8_t(speed_setting/fabs(speed_setting)) == dir && speed_setting !=0 && mode == 3)
-		{
-			robot.runon = true;
+			if(float(clock()-begin_time)/CLOCKS_PER_SEC*1000  >= 0.1) // 10 ms
+			{
+				if(present_speed < present_speed_setting) Gacceleration(0.03);
+				else if(present_speed > present_speed_setting) Deceleration(0.03);
+				else present_speed = present_speed_setting;
+				begin_time = clock();
+				//ROS_INFO("Line %d present_speed = %f",ucIndex, present_speed);
+			}
 			if(line_good == true)
 			{
-
-				robot.wheel_letf = W_l*dir*(-1);
-				robot.wheel_right = W_r*dir;
+				robot.wheel_letf  = W_l*dir;
+				robot.wheel_right = W_r*dir*(-1);
 				if(track_level <= 3 && track_level > 0) ROS_WARN("From MLS%d: track too weak!!",ucIndex);
-
 			}else 
 				{
 				  	ROS_ERROR("From MLS%d: no track!!", ucIndex);
 				    robot.wheel_letf = 0;
 				    robot.wheel_right = 0;
 				}
+			ROS_INFO("Banh trai = %d Banh phai = %d",robot.wheel_letf, robot.wheel_right);
+			speedwheel.publish(robot);
+		}
 
-		}else robot.runon = false;
-
-		speedwheel.publish(robot);
 		loop_rate.sleep();
 		ros::spinOnce();
 	}
 	
-
-
 	return 0;
 }
 

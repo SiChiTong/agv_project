@@ -31,15 +31,15 @@ void speedWheelCallback(const driver_blvd_controller::speed_wheel& robot)
 	speed[0] = robot.wheel_letf;
     speed[1] = robot.wheel_right;
 
-    if(check_connect == 0)
-    {
-    	ROS_INFO("Connected ");
-	    for(int i= 0; i<3; i++) ROS_INFO("  ");
-	    ROS_INFO("Command speed :  %d ", speed[ID -1]);
-		ROS_INFO("Feedback speed:  %d ",(int16_t)feedback_speed[ID -1]);
-		ROS_INFO("Warning record:  %x ",warning_status[ID -1]);
-		ROS_INFO("Alarm record  :  %x ",alarm_status[ID -1]);
-    } 
+    // if(check_connect == 0)
+    // {
+    // 	ROS_INFO("Connected ");
+	//     for(int i= 0; i<3; i++) ROS_INFO("  ");
+	//     ROS_INFO("Command speed :  %d ", speed[ID -1]);
+	// 	ROS_INFO("Feedback speed:  %d ",(int16_t)feedback_speed[ID -1]);
+	// 	ROS_INFO("Warning record:  %x ",warning_status[ID -1]);
+	// 	ROS_INFO("Alarm record  :  %x ",alarm_status[ID -1]);
+    // } 
 } //navigationCallback
 
 int main(int argc, char **argv)
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 
 	if (argc > 1) {
 		if(sscanf(argv[1],"%d", &ID)==1) {
-			sprintf(topicPublish, "Diagnotics_Driver_%d",ID);
+			// sprintf(topicPublish, "Diagnotics_Driver_%d",ID);
 			ROS_INFO("ID = %d", ID);
 		}
 	else{
@@ -80,12 +80,17 @@ int main(int argc, char **argv)
 	/* Subscriber */
 	ros::Subscriber cmd_vel_to_wheel =  nh->subscribe("cmd_vel_to_wheel", 10,speedWheelCallback); 
     /* Publisher */
-    ros::Publisher diagnostic_pub = nh->advertise<diagnostic_msgs::DiagnosticArray>(topicPublish, 10);
+    ros::Publisher diagnostic_pub = nh->advertise<diagnostic_msgs::DiagnosticArray>("diagnostics", 10);
     
-    diagnostic_msgs::DiagnosticStatus Driver;
+    diagnostic_msgs::DiagnosticArray dir_array;
+	diagnostic_msgs::DiagnosticStatus Driver;
     diagnostic_msgs::KeyValue getSpeed;
     diagnostic_msgs::KeyValue alarmRecord;
     diagnostic_msgs::KeyValue warningRecord;
+
+	std::string Char_name = "/Oriental_BLVD20KM_";
+	Driver.name = Char_name + std::to_string(ID);
+	Driver.hardware_id = std::to_string(ID);
 
 	ros::Rate loop_rate(20); 
 	while(ros::ok())
@@ -133,11 +138,9 @@ int main(int argc, char **argv)
 			feedbackSpeed(ID, &feedback_speed[ID-1]);
 			readAlarm(ID, &alarm_status[ID-1]);
 			readWarning(ID, &warning_status[ID-1]);
-
-
-			Driver.name = "DriverBLDC/Oriental_BLVD20KM";
-			Driver.hardware_id = std::to_string(ID);
-
+			
+			Driver.values.clear();
+			
 			if (check_connect != 0)
 			{
 				Driver.level = diagnostic_msgs::DiagnosticStatus::ERROR;
@@ -170,7 +173,8 @@ int main(int argc, char **argv)
 			alarmRecord.value = std::to_string(alarm_status[ID-1]);
 			Driver.values.push_back(alarmRecord);
 			
-			//diagnostic_pub.publish(Driver);
+			dir_array.status.push_back(Driver);
+			diagnostic_pub.publish(dir_array);
 	
 			loop_rate.sleep();
 			ros::spinOnce();
