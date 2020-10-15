@@ -1,4 +1,6 @@
-float64  wheel_letf
-float64  wheel_right 
+int16 wheel_letf
+int16 wheel_right 
+
+
 
 

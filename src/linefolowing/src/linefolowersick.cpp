@@ -46,14 +46,14 @@ int16_t W_l, W_r; 				// speed befor gear]
 bool line_good;
 uint8_t track_level;
 uint8_t error_register;
-int8_t dir;
+int8_t direct = 0;
 
 
 void teleop_keyCallback(const geometry_msgs::Twist& msg)
 {
 
-	dir = msg.linear.y;
-	ROS_INFO("dir = %d",dir);
+	direct = msg.linear.y;
+	ROS_INFO("dir = %d",direct);
 
 }//teleop_keyCallback 
 
@@ -122,26 +122,27 @@ void mlsCallback(const linefolowing::MLS_Measurement& msg)
 	float v_r; // clockwise angular velocity of right wheel (ie radians per second)
 	float v_l; // counter-clockwise angular velocity of left wheel (ie radians per second)
 
-
-	if(msg.position[2] > 0)
-	{	
-		present_speed_setting = 0;
-		ROS_INFO("Vung 3, stop");	
-	}
-	else if(msg.position[2] <= 0)
+	if(direct !=0)
 	{
-		if(msg.position[0] == 0)
-		{
-			present_speed_setting = 1;
-			ROS_INFO("Vung 1, run");	
+		if(msg.position[2] > 0)
+		{	
+			present_speed_setting = 0;
+			ROS_INFO("Vung 3, stop");	
 		}
-		else if(msg.position[0] < 0)
+		else if(msg.position[2] <= 0)
 		{
-			present_speed_setting = 0.3;
-			ROS_INFO("Vung 1, giam toc");	 	
+			if(msg.position[0] == 0)
+			{
+				present_speed_setting = 1;
+				ROS_INFO("Vung 1, run");	
+			}
+			else if(msg.position[0] < 0)
+			{
+				present_speed_setting = 0.3;
+				ROS_INFO("Vung 1, giam toc");	 	
+			}
 		}
 	}
-	
 	V = abs(speed_setting*present_speed); // V cai dat 
 	angle_error = atan(msg.position[1]/Lm);
 	v_l = ((1 - (L*angle_error)/(2*Lt)) * (V/R)) * rad_rpm;
@@ -154,6 +155,7 @@ void mlsCallback(const linefolowing::MLS_Measurement& msg)
 	W_r = (int16_t)v_r*K;
 	if(W_r > v_max_wheel) W_r = v_max_wheel;
 	if(W_r < v_min_wheel) W_r = 0;
+	
 	
 } //echo_line_previousCallback
 
@@ -219,6 +221,7 @@ int main(int argc, char **argv)
 	sprintf(param,"/consept_mls%d/K",ucIndex);
   	n.getParam(param,K);
 
+	int8_t dir = 0;
   	strcpy(direction, DEFAULT_DIRECTION);
   	if (argc > 2) strcpy(direction, argv[2]);
   	
@@ -234,7 +237,7 @@ int main(int argc, char **argv)
 
 	/* Publisher */
 	ros::Publisher speedwheel;
-	speedwheel = n.advertise<linefolowing::speed_wheel>(topicPublish, 20);
+	speedwheel = n.advertise<linefolowing::speed_wheel>("cmd_vel_to_wheel", 20);
 
 	/* Subscriber position line */
 	ros::Subscriber mls = n.subscribe(topicSubscribe, 10,mlsCallback);
@@ -246,7 +249,7 @@ int main(int argc, char **argv)
 	while (ros::ok())
 	{
 		/* This is a message object. You stuff it with data, and then publish it. */
-	    if(int8_t(speed_setting/abs(speed_setting)) == dir && dir != 0 )
+	    if(int8_t(speed_setting/abs(speed_setting)) == dir && direct != 0 && direct == dir)
 		{
 			if(float(clock()-begin_time)/CLOCKS_PER_SEC*1000  >= 0.1) // 10 ms
 			{
