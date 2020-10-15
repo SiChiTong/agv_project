@@ -154,6 +154,7 @@ if __name__=="__main__":
     control_linear_vel  = 0.0
     control_angular_vel = 0.0
     control_mode = 1
+    direct = 0
 
     try:
         print(msg)
@@ -162,6 +163,7 @@ if __name__=="__main__":
             key = getKey()
             if key == '1': # che do bang tay
                 control_mode = 1
+                direct = 0
                 print("hand mode")
                 target_linear_vel   = 0.0
                 control_linear_vel  = 0.0
@@ -169,20 +171,22 @@ if __name__=="__main__":
                 control_angular_vel = 0.0
             elif key == '2': #che navigaton
                 control_mode = 2
+                direct = 1
                 target_linear_vel   = 0.0
                 control_linear_vel  = 0.0
                 target_angular_vel  = 0.0
                 control_angular_vel = 0.0
-                print("navigaton mode")
+                print("line tien")
             elif key == '3': # che do do line
                 control_mode = 3
+                direct = -1
                 target_linear_vel   = 0.0
                 control_linear_vel  = 0.0
                 target_angular_vel  = 0.0
                 control_angular_vel = 0.0
-                print("line mode")
+                print("line lui")
 
-            if control_mode !=2:    
+            if control_mode == 1:    
                 if key == 'w' or key == 'W':
                     target_linear_vel = checkLinearLimitVelocity(target_linear_vel + LIN_VEL_STEP_SIZE)
                     status = status + 1
@@ -216,7 +220,7 @@ if __name__=="__main__":
             twist = Twist()
         
             control_linear_vel = makeSimpleProfile(control_linear_vel, target_linear_vel, (LIN_VEL_STEP_SIZE/2.0))
-            twist.linear.x = control_linear_vel; twist.linear.y = control_mode; twist.linear.z = 0.0
+            twist.linear.x = control_linear_vel; twist.linear.y = direct; twist.linear.z = 0.0
 
             control_angular_vel = makeSimpleProfile(control_angular_vel, target_angular_vel, (ANG_VEL_STEP_SIZE/2.0))
             twist.angular.x = 0.0; twist.angular.y = 0.0; twist.angular.z = control_angular_vel

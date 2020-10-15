@@ -1,8 +1,8 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
-#include "r2serial_driver/MLS_Measurement.h"
+#include "linefolowing/MLS_Measurement.h"
 #include <geometry_msgs/Twist.h>
-#include "r2serial_driver/speed_wheel.h" 
+#include "linefolowing/speed_wheel.h" 
 #include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,9 +46,18 @@ int16_t W_l, W_r; 				// speed befor gear]
 bool line_good;
 uint8_t track_level;
 uint8_t error_register;
-int8_t dir; 
+int8_t dir;
 
-void mlsCallback(const r2serial_driver::MLS_Measurement& msg)
+
+void teleop_keyCallback(const geometry_msgs::Twist& msg)
+{
+
+	dir = msg.linear.y;
+	ROS_INFO("dir = %d",dir);
+
+}//teleop_keyCallback 
+
+void mlsCallback(const linefolowing::MLS_Measurement& msg)
 {
 
 	uint8_t *status;   uint8_t *lcp; 
@@ -112,6 +121,26 @@ void mlsCallback(const r2serial_driver::MLS_Measurement& msg)
 	float W;  // angular velocity (ie radians per second)
 	float v_r; // clockwise angular velocity of right wheel (ie radians per second)
 	float v_l; // counter-clockwise angular velocity of left wheel (ie radians per second)
+
+
+	if(msg.position[2] > 0)
+	{	
+		present_speed_setting = 0;
+		ROS_INFO("Vung 3, stop");	
+	}
+	else if(msg.position[2] <= 0)
+	{
+		if(msg.position[0] == 0)
+		{
+			present_speed_setting = 1;
+			ROS_INFO("Vung 1, run");	
+		}
+		else if(msg.position[0] < 0)
+		{
+			present_speed_setting = 0.3;
+			ROS_INFO("Vung 1, giam toc");	 	
+		}
+	}
 	
 	V = abs(speed_setting*present_speed); // V cai dat 
 	angle_error = atan(msg.position[1]/Lm);
@@ -142,8 +171,7 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "MLS_Line_Sick_Forward");
 	ros::NodeHandle n;	
 	ros::Rate loop_rate(20);
-	r2serial_driver::speed_wheel robot;
-    robot.start = false;
+	linefolowing::speed_wheel robot;
 
 	//Open and initialize the serial port to the uController
   	if (argc > 1) 
@@ -166,20 +194,28 @@ int main(int argc, char **argv)
 
   	sprintf(param,"/consept_mls%d/present_speed_setting",ucIndex);
   	n.getParam(param,present_speed_setting);
+
   	sprintf(param,"/consept_mls%d/L",ucIndex);
   	n.getParam(param,L);
+
   	sprintf(param,"/consept_mls%d/Lm",ucIndex);
   	n.getParam(param,Lm);
+
 	sprintf(param,"/consept_mls%d/R",ucIndex);
   	n.getParam(param,R);
+
   	sprintf(param,"/consept_mls%d/Lt",ucIndex);
   	n.getParam(param,Lt);
+
   	sprintf(param,"/consept_mls%d/v_max_wheel",ucIndex);
   	n.getParam(param,v_max_wheel);
+
   	sprintf(param,"/consept_mls%d/v_min_wheel",ucIndex);
   	n.getParam(param,v_min_wheel);
+
 	sprintf(param,"/consept_mls%d/Speed",ucIndex);
-  	n.getParam(param,speed_setting);
+    n.getParam(param,speed_setting);
+
 	sprintf(param,"/consept_mls%d/K",ucIndex);
   	n.getParam(param,K);
 
@@ -198,17 +234,19 @@ int main(int argc, char **argv)
 
 	/* Publisher */
 	ros::Publisher speedwheel;
-	speedwheel = n.advertise<r2serial_driver::speed_wheel>(topicPublish, 20);
+	speedwheel = n.advertise<linefolowing::speed_wheel>(topicPublish, 20);
 
 	/* Subscriber position line */
-	ros::Subscriber mls;
-	mls = n.subscribe(topicSubscribe, 10,mlsCallback);  
+	ros::Subscriber mls = n.subscribe(topicSubscribe, 10,mlsCallback);
+	ros::Subscriber teleop_key = n.subscribe("cmd_vel", 10,teleop_keyCallback);
+	 
+	/* clock */
 	clock_t begin_time = clock();
 
 	while (ros::ok())
 	{
 		/* This is a message object. You stuff it with data, and then publish it. */
-	    if(int8_t(speed_setting/abs(speed_setting)) == dir)
+	    if(int8_t(speed_setting/abs(speed_setting)) == dir && dir != 0 )
 		{
 			if(float(clock()-begin_time)/CLOCKS_PER_SEC*1000  >= 0.1) // 10 ms
 			{
