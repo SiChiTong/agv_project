@@ -490,7 +490,7 @@ uint8_t readQuery(uint8_t address, uint8_t fnCode, uint8_t data[], uint16_t data
 	uint16_t queryLen = 0;	
 	uint8_t read_buf [BLVD20KM_QUERY_MAX_LEN];
 	memset(&read_buf, '\0', BLVD20KM_QUERY_MAX_LEN);
-	usleep(100);
+	//usleep(100);
 	timeout.tv_sec = 1;
 	timeout.tv_usec = 0;
 	FD_ZERO(&set); /* clear the set */

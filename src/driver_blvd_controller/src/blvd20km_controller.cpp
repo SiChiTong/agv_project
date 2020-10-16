@@ -78,9 +78,9 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "Driver_motor");
 	ros::NodeHandlePtr nh = boost::make_shared<ros::NodeHandle>();
 	/* Subscriber */
-	ros::Subscriber cmd_vel_to_wheel =  nh->subscribe("cmd_vel_to_wheel", 60,speedWheelCallback); 
+	ros::Subscriber cmd_vel_to_wheel =  nh->subscribe("cmd_vel_to_wheel", 20,speedWheelCallback); 
     /* Publisher */
-    ros::Publisher diagnostic_pub = nh->advertise<diagnostic_msgs::DiagnosticArray>("diagnostics", 60);
+    ros::Publisher diagnostic_pub = nh->advertise<diagnostic_msgs::DiagnosticArray>("diagnostics", 20);
     
     diagnostic_msgs::DiagnosticArray dir_array;
 	diagnostic_msgs::DiagnosticStatus Driver;
@@ -98,18 +98,18 @@ int main(int argc, char **argv)
 		/* onpen comport */
 		ROS_INFO("connection initializing (%s) at %d baud", port, baud);
 		Mb_open_device(port,baud,1,8,1); /*even , 8 bit, 1 stop_bit*/
+		sleep(1);
 		if(stat(port, &sb) == 0)
 		{
 				writeResetAlarm(ID); 
 				writeSpeedControlMode(ID,BLVD02KM_SPEED_MODE_USE_DIGITALS);
-				writeAcceleration(ID,2);
-				writeDeceleration(ID,2);
+				writeAcceleration(ID,10);
+				writeDeceleration(ID,10);
 				writeSpeed(ID,BLVD20KM_SPEED_MIN);
 				writeStop(ID);
 				clearAlarmRecords(ID); 
 				clearWarningRecords(ID);
 		}
-			sleep(1);
 		while(ros::ok())
 		{
 			if((double)(clock() -  begin)/( CLOCKS_PER_SEC/1000) >= 2)

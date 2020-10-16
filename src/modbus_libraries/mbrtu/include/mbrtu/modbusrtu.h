@@ -17,7 +17,7 @@
 #include <stdlib.h>  
 
 
-#define C3_5_time 5000
+#define C3_5_time 12000
 #define FN_CODE_READ        0x03
 #define FN_CODE_WRITE       0x06
 #define FN_CODE_DIAGNOSIS   0x08

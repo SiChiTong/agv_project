@@ -66,11 +66,11 @@ int main(int argc, char **argv)
 
   /* Publisher */
   ros::Publisher Navigation_control;
-  Navigation_control = nh.advertise<driver_blvd_controller::speed_wheel>("cmd_vel_to_wheel", 1000);
+  Navigation_control = nh.advertise<driver_blvd_controller::speed_wheel>("cmd_vel_to_wheel", 20);
 
   /* Subscriber */
   ros::Subscriber cmd_vel;
-  cmd_vel = nh.subscribe("cmd_vel", 10,cmd_velCallback);
+  cmd_vel = nh.subscribe("cmd_vel", 20,cmd_velCallback);
   uint64_t time_count;
   while (ros::ok())
   {
@@ -81,8 +81,8 @@ int main(int argc, char **argv)
     robot.wheel_right = -W_r;
     Navigation_control.publish(robot);
 
-    if((clock() - start)/CLOCKS_PER_SEC >= timeoutMs) 
-        W_r = W_l= 0;
+    // if((clock() - start)/CLOCKS_PER_SEC >= timeoutMs) 
+    //     W_r = W_l= 0;
     loop_rate.sleep();
     ros::spinOnce();
   }

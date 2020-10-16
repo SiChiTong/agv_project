@@ -53,7 +53,6 @@ void teleop_keyCallback(const geometry_msgs::Twist& msg)
 {
 
 	direct = msg.linear.y;
-	ROS_INFO("dir = %d",direct);
 
 }//teleop_keyCallback 
 
@@ -124,38 +123,42 @@ void mlsCallback(const linefolowing::MLS_Measurement& msg)
 
 	if(direct == dir)
 	{
-		if(msg.position[2] > 0)
-		{	
-			present_speed_setting = 0;
-			ROS_INFO("Vung 3, stop");	
-		}
-		else if(msg.position[2] <= 0)
+		if(line_good == true)
 		{
-			if(msg.position[0] == 0)
-			{
-				present_speed_setting = 1;
-				ROS_INFO("Vung 1, run");	
+			if(msg.position[2] > 0)
+			{	
+				present_speed_setting = 0;
+				ROS_INFO("Vung 3, stop  dir = %d", dir);	
 			}
-			else if(msg.position[0] < 0)
+			else if(msg.position[2] <= 0)
 			{
-				present_speed_setting = 0.3;
-				ROS_INFO("Vung 1, giam toc");	 	
+				if(msg.position[0] == 0)
+				{
+					present_speed_setting = 1;
+					ROS_INFO("Vung 1, run, dir = %d", dir);	
+				}
+				else if(msg.position[0] < 0)
+				{
+					present_speed_setting = 0.35;
+					ROS_INFO("Vung 1, giam toc, dir = %d", dir);	 	
+				}
 			}
-		}
+		}else present_speed_setting = 0;
 	}
+
 	V = abs(speed_setting*present_speed); // V cai dat 
 	angle_error = atan(msg.position[1]/Lm);
 	v_l = ((1 - (L*angle_error)/(2*Lt)) * (V/R)) * rad_rpm;
 	v_r = ((1 + (L*angle_error)/(2*Lt)) * (V/R)) * rad_rpm;
 	
-	W_l = (int)v_l*K;
+	W_l = v_l*K;
 	if(W_l > v_max_wheel) W_l = v_max_wheel;
 	if(W_l < v_min_wheel) W_l = 0;
 
-	W_r = (int)v_r*K;
+	W_r = v_r*K;
 	if(W_r > v_max_wheel) W_r = v_max_wheel;
 	if(W_r < v_min_wheel) W_r = 0;
-	ROS_INFO("Banh trai = %d Banh phai = %d",W_l, W_r);
+	//ROS_INFO("Banh trai = %d Banh phai = %d",W_l, W_r);
 	
 } //echo_line_previousCallback
 
@@ -236,11 +239,11 @@ int main(int argc, char **argv)
 
 	/* Publisher */
 	ros::Publisher speedwheel;
-	speedwheel = n.advertise<linefolowing::speed_wheel>("cmd_vel_to_wheel", 60);
+	speedwheel = n.advertise<linefolowing::speed_wheel>("cmd_vel_to_wheel", 20);
 
 	/* Subscriber position line */
-	ros::Subscriber mls = n.subscribe(topicSubscribe, 60,mlsCallback);
-	ros::Subscriber teleop_key = n.subscribe("cmd_vel", 60,teleop_keyCallback);
+	ros::Subscriber mls = n.subscribe(topicSubscribe, 20,mlsCallback);
+	ros::Subscriber teleop_key = n.subscribe("cmd_vel", 20,teleop_keyCallback);
 	 
 	/* clock */
 	clock_t begin_time = clock();
@@ -250,10 +253,10 @@ int main(int argc, char **argv)
 		/* This is a message object. You stuff it with data, and then publish it. */
 	    if(int8_t(speed_setting/abs(speed_setting)) == dir && direct != 0 && direct == dir)
 		{
-			if(float(clock()-begin_time)/CLOCKS_PER_SEC*1000  >= 0.1) // 10 ms
+			if(float(clock()-begin_time)/CLOCKS_PER_SEC*1000  >= 1) // 0 ms
 			{
-				if(present_speed < present_speed_setting) Gacceleration(0.035);
-					else if(present_speed > present_speed_setting) Deceleration(0.03);
+				if(present_speed < present_speed_setting) Gacceleration(0.009);
+					else if(present_speed > present_speed_setting) Deceleration(0.001);
 						else present_speed = present_speed_setting;
 				begin_time = clock();
 				//ROS_INFO("Line %d present_speed = %f",ucIndex, present_speed);
@@ -269,7 +272,7 @@ int main(int argc, char **argv)
 				    robot.wheel_letf = 0;
 				    robot.wheel_right = 0;
 				}
-			//ROS_INFO("Banh trai = %d Banh phai = %d",robot.wheel_letf, robot.wheel_right);
+			ROS_INFO("Banh trai = %d Banh phai = %d",robot.wheel_letf, robot.wheel_right);
 			speedwheel.publish(robot);
 		}
 
