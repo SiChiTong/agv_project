@@ -1,6 +1,6 @@
-//
-// Created by Fanzhe on 5/28/2017.
-//
+/*
+** Created by Hiep on 5/8/2020.
+*/
 
 #ifndef MODBUSPP_MODBUS_H
 #define MODBUSPP_MODBUS_H
@@ -43,7 +43,7 @@
 #define    BAD_CON              -1
 
 /// Modbus Operator Class
-/**
+/*
  * Modbus Operator Class
  * Providing networking support and mobus operation support.
  */

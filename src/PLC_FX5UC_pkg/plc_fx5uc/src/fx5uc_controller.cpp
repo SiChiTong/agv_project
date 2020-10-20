@@ -45,37 +45,37 @@ int main(int argc, char **argv)
     ros::Rate loop_rate(20);
     /* Publisher */
     ros::Publisher cmd_PLC;
-     cmd_PLC = nh.advertise<diagnostic_msgs::DiagnosticStatus>("PLC_infomation", 1000);
-    bool bitM[10];
-    bool m1m2m3[3] = {OFF,OFF,OFF};
+    cmd_PLC = nh.advertise<diagnostic_msgs::DiagnosticStatus>("PLC_infomation", 40);
+    bool M_echo[20];
+    bool M_pub[3] = {OFF,OFF,OFF};
     while(ros::ok())
     {   
-        fx5uc->modbus_read_coils(Mbit, 10,bitM); 
+        fx5uc->modbus_read_coils(Mbit, 10,M_echo); 
         //ROS_INFO("M0 = %d M5 = %d M6 = %d M7 = %d",bitM[0],bitM[5],bitM[6],bitM[7]);  
-        if(bitM[0] == ON)// Nếu M0 on 
+        if(M_echo[0] == ON)// Nếu M0 on 
         {
-            if(bitM[5] == ON){
+            if(M_echo[5] == ON){
                 device.D[1] = RED;
-                m1m2m3[0] = ON;m1m2m3[1] = ON;m1m2m3[2] = OFF;
+                M_pub[0] = ON;M_pub[1] = ON;M_pub[2] = OFF;
             }
 
-            else if(bitM[6] == ON){
+            else if(M_echo[6] == ON){
                 device.D[1] = YELLOW;
-                m1m2m3[0] = ON;m1m2m3[1] = ON;m1m2m3[2] = OFF;
+                M_pub[0] = ON;M_pub[1] = ON;M_pub[2] = OFF;
             }
-            else if(bitM[7]== ON){
+            else if(M_echo[7]== ON){
                 device.D[1] = YELLOW;
-                m1m2m3[0] = ON;m1m2m3[1] = OFF;m1m2m3[2] = OFF;
+                M_pub[0] = ON;M_pub[1] = OFF;M_pub[2] = OFF;
             }
-            else if(bitM[8]== ON){
+            else if(M_echo[8]== ON){
             device.D[1] = GREEN;
-            m1m2m3[0] = ON;m1m2m3[1] = OFF;m1m2m3[2] = OFF;
+            M_pub[0] = ON;M_pub[1] = OFF;M_pub[2] = OFF;
             }
-            else if(bitM[9]== ON){
+            else if(M_echo[9]== ON){
             device.D[1] = BULE;
-            m1m2m3[0] = ON;m1m2m3[1] = OFF;m1m2m3[2] = OFF;
+            M_pub[0] = ON;M_pub[1] = OFF;M_pub[2] = OFF;
             }
-            fx5uc->modbus_write_coils(Mbit+1, 3,m1m2m3); 
+            fx5uc->modbus_write_coils(Mbit+1, 3,M_pub); 
             fx5uc->modbus_write_register(0, device.D[1]); 
         } else ROS_INFO("not listen"); 
         //diagnomic_reg();
