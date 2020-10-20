@@ -1,6 +1,6 @@
-/*
-** Created by Hiep on 5/8/2020.
-*/
+//
+// Created by hiep 10/4/2020
+//
 #include "mbtcp/modbus.h"
 
 /**
@@ -20,6 +20,8 @@ modbus::modbus(std::string host, uint16_t port=502) {
     error_msg = "";
 }
 
+
+
 /**
  * Destructor of Modbus Connector Object
  */
@@ -33,6 +35,8 @@ modbus::~modbus(void) = default;
 void modbus::modbus_set_slave_id(int id) {
     _slaveid = id;
 }
+
+
 
 /**
  * Build up a Modbus/TCP Connection

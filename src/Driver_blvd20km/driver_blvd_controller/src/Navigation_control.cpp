@@ -2,6 +2,7 @@
 #include "std_msgs/String.h"
 #include <geometry_msgs/Twist.h>
 #include "driver_blvd_controller/speed_wheel.h"
+#include "linefolowing/agv_action.h"
 #include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +20,34 @@
 int16_t W_l, W_r; // speed befor gear 
 clock_t start;
 const unsigned long timeoutMs = 1; //sec
+uint8_t action_ ;
+void actionCallback(const linefolowing::agv_action& msg)
+{
+	ROS_INFO("linefolowersick.cpp-55-actionCallback()");
+  action_ = msg.action;
+	// linefolowing::agv_action status = ActionState(action_);
+    // switch(action_){
+    //   case 0:
+    //     break;
+    //   case 1:
+    //     break;
+    //   case 2:
+    //     break;
+    //   case 3:
+		// 	direct = -1;	  
+    //     break;
+    //   case 4:
+	  // 		direct = 1;
+    //     break;
+    //   case 5:
+    //     break;
+    //   case 6:
+    //     break;
+    //   default:
+    //   {}
+    //}
+}//teleop_keyCallback 
+
 void cmd_velCallback(const geometry_msgs::Twist& msg)
 {
   start = clock();
@@ -51,7 +80,7 @@ void cmd_velCallback(const geometry_msgs::Twist& msg)
 
   if(abs(W_r) < BLVD20KM_SPEED_MIN) W_r = 0;
   if(abs(W_l) < BLVD20KM_SPEED_MIN) W_l = 0;
-  ROS_INFO("Wheel left: %d  Wheel right: %d", W_l, W_r);
+  ROS_INFO("Navigation_control.cpp-83- Wheel left: %d  Wheel right: %d", W_l, W_r);
 } //cmd_velCallback
 
 int main(int argc, char **argv)
@@ -71,16 +100,20 @@ int main(int argc, char **argv)
   /* Subscriber */
   ros::Subscriber cmd_vel;
   cmd_vel = nh.subscribe("cmd_vel", 20,cmd_velCallback);
+  ros::Subscriber action = nh.subscribe("agv_action", 20,actionCallback);
   uint64_t time_count;
   while (ros::ok())
   {
   /*
   * This is a message object. You stuff it with data, and then publish it.
   */
+  if(action_ != 3 && action_ != 4)
+  {
     robot.wheel_letf = W_l;
     robot.wheel_right = -W_r;
     Navigation_control.publish(robot);
-
+    // ROS_INFO("Navigation_control.cpp-115- Publish to driver - Wheel left: %d  Wheel right: %d", robot.wheel_letf, robot.wheel_right);
+  }
     // if((clock() - start)/CLOCKS_PER_SEC >= timeoutMs) 
     //     W_r = W_l= 0;
     loop_rate.sleep();
