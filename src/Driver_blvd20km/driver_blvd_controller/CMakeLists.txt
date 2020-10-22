@@ -17,7 +17,6 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
     FILES
     speed_wheel.msg
-    MLS_Measurement.msg
 )
 
 generate_messages(

@@ -1,4 +1,3 @@
-#include <vector>
 #include <string>
 #include <ros/ros.h>
 #include <sys/stat.h>
@@ -83,14 +82,20 @@ int main(int argc, char **argv)
     ros::Publisher diagnostic_pub = nh->advertise<diagnostic_msgs::DiagnosticArray>("diagnostics", 20);
     
     diagnostic_msgs::DiagnosticArray dir_array;
-	diagnostic_msgs::DiagnosticStatus Driver;
+	diagnostic_msgs::DiagnosticStatus device;
+	
     diagnostic_msgs::KeyValue getSpeed;
     diagnostic_msgs::KeyValue alarmRecord;
     diagnostic_msgs::KeyValue warningRecord;
+    diagnostic_msgs::KeyValue lcp1;
+    diagnostic_msgs::KeyValue lcp2;
+    diagnostic_msgs::KeyValue lcp3;
+
 
 	std::string Char_name = "/Oriental_BLVD20KM_";
-	Driver.name = Char_name + std::to_string(ID);
-	Driver.hardware_id = std::to_string(ID);
+	device.name = Char_name + std::to_string(ID);
+	std::string Char_id = "0x0";
+	device.hardware_id = Char_id + std::to_string(ID);
 
 	ros::Rate loop_rate(20); 
 	while(ros::ok())
@@ -124,56 +129,53 @@ int main(int argc, char **argv)
 				break;
 			} 
 
-			if(speed[ID-1] > 0)
-			{
-				writeForward(ID);
-
-			}else if(speed[ID-1] < 0)
-			{
-				writeReverse(ID);
-
-			}else writeStop(ID);
-
-			writeSpeed(ID, abs(speed[ID-1]));
-			feedbackSpeed(ID, &feedback_speed[ID-1]);
 			readAlarm(ID, &alarm_status[ID-1]);
+			if(alarm_status[ID-1] == 0)
+			{
+				if(speed[ID-1] > 0) writeForward(ID);
+					else if(speed[ID-1] < 0) writeReverse(ID);
+						else writeStop(ID);
+
+				writeSpeed(ID, abs(speed[ID-1]));
+			}
+			feedbackSpeed(ID, &feedback_speed[ID-1]);
 			readWarning(ID, &warning_status[ID-1]);
 			
-			Driver.values.clear();
+			device.values.clear();
 			
 			if (check_connect != 0)
 			{
-				Driver.level = diagnostic_msgs::DiagnosticStatus::ERROR;
-				Driver.message = "Driver disconnected. Check connection,plaese!!";
+				device.level = diagnostic_msgs::DiagnosticStatus::ERROR;
+				device.message = "Driver disconnected. Check connection,plaese!!";
 			}else if(alarm_status[ID-1] != 0)
 				{
-					Driver.level = diagnostic_msgs::DiagnosticStatus::ERROR;
-					Driver.message = "Driver is alarm. Reset device, please!!";
+					device.level = diagnostic_msgs::DiagnosticStatus::ERROR;
+					device.message = "Driver is alarm. Reset device, please!!";
 				}
 			else if (warning_status[ID-1] !=0)
 				{
-					Driver.level = diagnostic_msgs::DiagnosticStatus::WARN;
-					Driver.message = " Warning from driver. Attention!!";
+					device.level = diagnostic_msgs::DiagnosticStatus::WARN;
+					device.message = " Warning from driver. Attention!!";
 				}
 			else
 				{
-					Driver.level = diagnostic_msgs::DiagnosticStatus::OK;
-					Driver.message = "Driver seem to be ok.";
+					device.level = diagnostic_msgs::DiagnosticStatus::OK;
+					device.message = "Driver seem to be ok.";
 				}
 
 			getSpeed.key = "Feed back speed";
 			getSpeed.value = std::to_string((int16_t)feedback_speed[ID-1]);
-			Driver.values.push_back(getSpeed);
+			device.values.push_back(getSpeed);
 
 			warningRecord.key = "Warning record";
 			warningRecord.value = std::to_string(warning_status[ID-1]);
-			Driver.values.push_back(warningRecord);
+			device.values.push_back(warningRecord);
 
 			alarmRecord.key = "Alarm record";
 			alarmRecord.value = std::to_string(alarm_status[ID-1]);
-			Driver.values.push_back(alarmRecord);
+			device.values.push_back(alarmRecord);
 			
-			dir_array.status.push_back(Driver);
+			dir_array.status.push_back(device);
 			diagnostic_pub.publish(dir_array);
 	
 			loop_rate.sleep();
